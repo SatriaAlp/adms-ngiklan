@@ -138,7 +138,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const [activeTab, setActiveTab] = useState<string>('home');
-  const [dashboardSubTab, setDashboardSubTab] = useState<string>('overview');
+  const [dashboardSubTab, setDashboardSubTabState] = useState<string>('overview');
+
+  const setDashboardSubTab = (subTab: string) => {
+    setDashboardSubTabState(subTab);
+    let subSegment = subTab;
+    if (subTab === 'ads-catalog') subSegment = 'ads';
+    else if (subTab === 'merchants-catalog') subSegment = 'merchants';
+    else if (subTab === 'pricing-catalog') subSegment = 'pricing';
+    
+    let path = '/dashboard';
+    if (subSegment !== 'overview') {
+      path = `/dashboard/${subSegment}`;
+    }
+    if (window.location.pathname !== path) {
+      window.history.pushState(null, '', path);
+    }
+  };
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [selectedMerchantId, setSelectedMerchantId] = useState<string | null>(null);
   const [selectedAdId, setSelectedAdId] = useState<string | null>(null);
@@ -255,15 +271,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setIsLoginModalOpen(true);
       return;
     }
+    if (tab === 'pasang-iklan-gratis' && !isLoggedIn && !forceAccess) {
+      addNotification('Silakan login terlebih dahulu untuk memasang iklan gratis.', 'warning');
+      setPendingPostAd(true);
+      setIsLoginModalOpen(true);
+      return;
+    }
 
+    let subTabName = '';
     if (tab === 'marketplace' || tab === 'ads' || tab === 'merchants' || tab === 'pricing') {
       setActiveTab('dashboard');
-      setDashboardSubTab(
+      const resolvedSubTab = 
         tab === 'ads' ? 'ads-catalog' : 
         tab === 'merchants' ? 'merchants-catalog' : 
         tab === 'pricing' ? 'pricing-catalog' : 
-        tab
-      );
+        tab;
+      setDashboardSubTabState(resolvedSubTab);
+      subTabName = tab;
     } else {
       setActiveTab(tab);
     }
@@ -273,8 +297,69 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (params.adId) setSelectedAdId(params.adId);
       if (params.category !== undefined) setSelectedCategory(params.category);
     }
+
+    let path = '/';
+    if (['iklan-gratis', 'pasang-iklan-gratis', 'upload-produk', 'daftar-merchant', 'bantuan'].includes(tab)) {
+      path = `/${tab}`;
+    } else if (tab === 'dashboard') {
+      path = '/dashboard';
+    } else if (subTabName) {
+      path = `/dashboard/${subTabName}`;
+    }
+    if (window.location.pathname !== path) {
+      window.history.pushState(null, '', path);
+    }
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  React.useEffect(() => {
+    const handlePopState = () => {
+      const path = window.location.pathname;
+      if (path === '/' || path === '/home') {
+        setActiveTab('home');
+      } else if (path === '/iklan-gratis') {
+        setActiveTab('iklan-gratis');
+      } else if (path === '/pasang-iklan-gratis') {
+        if (!isLoggedIn) {
+          setActiveTab('home');
+          window.history.replaceState(null, '', '/');
+          setIsLoginModalOpen(true);
+          setPendingPostAd(true);
+          addNotification('Silakan login terlebih dahulu untuk memasang iklan gratis.', 'warning');
+        } else {
+          setActiveTab('pasang-iklan-gratis');
+        }
+      } else if (path === '/upload-produk') {
+        setActiveTab('upload-produk');
+      } else if (path === '/daftar-merchant') {
+        setActiveTab('daftar-merchant');
+      } else if (path === '/bantuan') {
+        setActiveTab('bantuan');
+      } else if (path.startsWith('/dashboard')) {
+        setActiveTab('dashboard');
+        const segments = path.split('/');
+        if (segments[2]) {
+          const sub = segments[2];
+          setDashboardSubTabState(
+            sub === 'ads' ? 'ads-catalog' : 
+            sub === 'merchants' ? 'merchants-catalog' : 
+            sub === 'pricing' ? 'pricing-catalog' : 
+            sub
+          );
+        } else {
+          setDashboardSubTabState('overview');
+        }
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    handlePopState();
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [isLoggedIn]);
 
   const addToCart = (product: Product) => {
     setCart((prev) => {

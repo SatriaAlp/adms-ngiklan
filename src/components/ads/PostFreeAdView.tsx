@@ -3,7 +3,8 @@ import { useApp } from '../../context/AppContext';
 import { 
   X, Megaphone, Sparkles, CheckCircle2, Image as ImageIcon, 
   ArrowLeft, ArrowRight, ShieldCheck, CreditCard, Zap, 
-  MapPin, Phone, Mail, User, Info, FileText, Check, ArrowLeftCircle
+  MapPin, Phone, Mail, User, Info, FileText, Check, ArrowLeftCircle,
+  Car, Smartphone, Home, Briefcase, Tv, Heart, PlusCircle
 } from 'lucide-react';
 import { UserRole } from '../../types';
 
@@ -18,8 +19,12 @@ export const PostFreeAdView: React.FC = () => {
     setIsLoginModalOpen,
     setPendingAdPublishPayload,
     pendingAdPublishPayload,
-    navigate
+    navigate,
+    ads
   } = useApp();
+
+  // Landing page state
+  const [showLanding, setShowLanding] = useState<boolean>(true);
 
   // Multi-step state
   const [step, setStep] = useState<number>(1);
@@ -186,16 +191,193 @@ export const PostFreeAdView: React.FC = () => {
     addNotification('Iklan berhasil dikirim dan siap ditinjau oleh Admin!', 'success');
   };
 
+  if (showLanding) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12 animate-fade-in">
+        {/* Hero Section */}
+        <div className="relative rounded-3xl bg-gradient-to-br from-navy-dark via-navy to-navy-light border border-navy-dark p-8 sm:p-12 overflow-hidden shadow-2xl text-white">
+          {/* Decorative glows */}
+          <div className="absolute -top-20 -left-20 w-[350px] h-[350px] bg-emerald-500/10 rounded-full blur-[100px] pointer-events-none opacity-40"></div>
+          <div className="absolute -bottom-20 -right-20 w-[300px] h-[300px] bg-gold/10 rounded-full blur-[90px] pointer-events-none opacity-30"></div>
+
+          <div className="relative z-10 max-w-3xl space-y-6">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-white/5 border border-white/10 backdrop-blur-md text-gold text-xs font-bold">
+              <Sparkles className="w-3.5 h-3.5 text-gold" /> Pasang Iklan Baris Klasifikasi Gratis
+            </div>
+
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-tight tracking-tight">
+              Pasang Iklan Anda <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent font-black">Sekarang Juga!</span>
+            </h1>
+
+            <p className="text-slate-350 text-sm sm:text-base leading-relaxed font-normal max-w-2xl">
+              Jangkau ribuan calon pembeli potensial di seluruh Indonesia dengan cepat, mudah, dan Rp0 biaya pasang! Iklan Anda akan ditampilkan di direktori classifieds kami secara instan.
+            </p>
+
+            <div className="pt-2">
+              <button
+                onClick={() => setShowLanding(false)}
+                className="w-full sm:w-auto bg-gold hover:bg-gold/90 text-navy font-bold text-sm sm:text-base px-8 py-3.5 rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all active:scale-[0.98] cursor-pointer"
+              >
+                <PlusCircle className="w-5 h-5 text-navy" />
+                <span>Mulai Pasang Iklan Gratis</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Categories Section (inspired by ngiklan.oketheme.com Kategori) */}
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-3">
+            <div>
+              <h3 className="font-extrabold text-lg text-slate-900">Kategori Iklan Baris</h3>
+              <p className="text-xs text-slate-500 font-medium">Pilih kategori iklan yang sesuai untuk produk atau jasa Anda.</p>
+            </div>
+            <span className="text-[10px] bg-slate-100 text-slate-500 font-bold px-2 py-0.5 rounded uppercase tracking-wider shrink-0 w-fit">
+              Classifieds Categories
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">
+            {[
+              { name: 'Mobil', icon: Car, color: 'bg-blue-50 text-blue-600 border-blue-100 hover:bg-blue-100/50' },
+              { name: 'Motor', icon: Car, color: 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100/50' },
+              { name: 'Handphone', icon: Smartphone, color: 'bg-purple-50 text-purple-600 border-purple-100 hover:bg-purple-100/50' },
+              { name: 'Properti', icon: Home, color: 'bg-amber-50 text-amber-600 border-amber-100 hover:bg-amber-100/50' },
+              { name: 'Elektronik', icon: Tv, color: 'bg-rose-50 text-rose-600 border-rose-100 hover:bg-rose-100/50' },
+              { name: 'Jasa', icon: Briefcase, color: 'bg-cyan-50 text-cyan-600 border-cyan-100 hover:bg-cyan-100/50' },
+              { name: 'Rumah Tangga', icon: Home, color: 'bg-indigo-50 text-indigo-600 border-indigo-100 hover:bg-indigo-100/50' },
+              { name: 'Hobi', icon: Heart, color: 'bg-teal-50 text-teal-600 border-teal-100 hover:bg-teal-100/50' },
+            ].map((cat, idx) => (
+              <button
+                key={idx}
+                onClick={() => {
+                  setCategory(cat.name === 'Elektronik' || cat.name === 'Rumah Tangga' || cat.name === 'Hobi' ? 'Handphone' : cat.name);
+                  setShowLanding(false);
+                }}
+                className={`flex flex-col items-center justify-center p-4 rounded-2xl border text-center transition-all duration-300 group cursor-pointer ${cat.color}`}
+              >
+                <div className="p-3 rounded-xl bg-white shadow-xs group-hover:scale-110 transition-transform">
+                  <cat.icon className="w-5 h-5" />
+                </div>
+                <span className="text-[11px] font-bold mt-2.5 whitespace-nowrap">{cat.name}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Benefits Section */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs flex items-start gap-4">
+            <div className="p-3 rounded-xl bg-amber-50 text-amber-500 border border-amber-100">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="font-extrabold text-sm text-slate-900">Iklan Gratis Rp0</h4>
+              <p className="text-xs text-slate-500 mt-1 leading-relaxed">Pasang iklan Anda secara gratis tanpa dipungut biaya sepeser pun selama 30 hari penuh.</p>
+            </div>
+          </div>
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs flex items-start gap-4">
+            <div className="p-3 rounded-xl bg-cyan-50 text-cyan-500 border border-cyan-100">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="font-extrabold text-sm text-slate-900">Moderasi Cepat & Aman</h4>
+              <p className="text-xs text-slate-500 mt-1 leading-relaxed">Setiap iklan ditinjau secara berkala untuk menjaga keaslian produk dan menghindari penipuan.</p>
+            </div>
+          </div>
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs flex items-start gap-4">
+            <div className="p-3 rounded-xl bg-emerald-50 text-emerald-500 border border-emerald-100">
+              <Zap className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="font-extrabold text-sm text-slate-900">Premium Boost</h4>
+              <p className="text-xs text-slate-500 mt-1 leading-relaxed">Tingkatkan iklan Anda ke tingkat Premium VIP Sponsor agar langsung tampil di beranda depan.</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Latest Ads Listing (inspired by ngiklan.oketheme.com Iklan Terbaru) */}
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-3">
+            <div>
+              <h3 className="font-extrabold text-lg text-slate-900">Iklan Klasifikasi Terbaru</h3>
+              <p className="text-xs text-slate-500 font-medium">Lihat apa yang dipromosikan orang lain saat ini.</p>
+            </div>
+            <span className="text-[10px] bg-slate-100 text-slate-500 font-bold px-2 py-0.5 rounded uppercase tracking-wider shrink-0 w-fit">
+              Latest Classified Ads
+            </span>
+          </div>
+
+          {ads.length === 0 ? (
+            <div className="text-center py-12 bg-white border border-slate-200 rounded-3xl">
+              <p className="text-xs text-slate-500 font-medium">Belum ada iklan baris terpasang.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {ads.slice(0, 8).map((ad) => (
+                <div key={ad.id} className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs hover:shadow-md transition-shadow">
+                  <div className="relative h-40 bg-slate-100">
+                    <img 
+                      src={ad.images?.[0] || 'https://images.unsplash.com/photo-1557838923-2985c318be48?w=800&auto=format&fit=crop&q=80'} 
+                      alt={ad.title} 
+                      className="w-full h-full object-cover" 
+                    />
+                    <div className="absolute top-2.5 left-2.5">
+                      {ad.type === 'premium' ? (
+                        <span className="px-2 py-0.5 rounded bg-amber-500 text-slate-950 font-black text-[9px] uppercase tracking-wider shadow-sm">
+                          VIP Sponsor
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded bg-slate-950/80 text-white font-bold text-[9px] uppercase tracking-wider shadow-sm">
+                          Gratis
+                        </span>
+                      )}
+                    </div>
+                    <span className="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded bg-white/95 text-slate-900 border border-slate-200 font-bold text-[9px] shadow-sm capitalize">
+                      Kondisi: {ad.condition || 'bekas'}
+                    </span>
+                  </div>
+
+                  <div className="p-4 space-y-2">
+                    <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">
+                      {ad.category}
+                    </span>
+                    <h4 className="font-bold text-sm text-slate-900 truncate" title={ad.title}>
+                      {ad.title}
+                    </h4>
+                    <div className="text-sm font-black text-slate-900">
+                      Rp{ad.price.toLocaleString('id-ID')}
+                    </div>
+                  </div>
+
+                  <div className="px-4 py-2.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-500 font-semibold">
+                    <div className="flex items-center gap-1 truncate max-w-[75%]">
+                      <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      <span className="truncate">{ad.location || 'Indonesia'}</span>
+                    </div>
+                    <span className="text-cyan-600 uppercase tracking-widest text-[9px] font-black shrink-0">
+                      Iklan Baris
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
       {/* Upper Back Bar */}
       <div className="flex items-center justify-between">
         <button
-          onClick={() => navigate('home')}
-          className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-slate-900 transition-colors"
+          onClick={() => setShowLanding(true)}
+          className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
         >
           <ArrowLeftCircle className="w-5 h-5 text-slate-500" />
-          <span>Kembali ke Beranda</span>
+          <span>Kembali ke Halaman Pemasangan</span>
         </button>
 
         <div className="text-right">
@@ -648,7 +830,7 @@ export const PostFreeAdView: React.FC = () => {
                   <button
                     type="button"
                     onClick={handlePrev}
-                    className="px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs flex items-center gap-1.5 transition-colors"
+                    className="px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
                   >
                     <ArrowLeft className="w-4 h-4" />
                     Kembali
@@ -661,7 +843,7 @@ export const PostFreeAdView: React.FC = () => {
                   <button
                     type="button"
                     onClick={handleNext}
-                    className="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center gap-1.5 transition-colors"
+                    className="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
                   >
                     Lanjutkan
                     <ArrowRight className="w-4 h-4" />
@@ -670,7 +852,7 @@ export const PostFreeAdView: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => handlePublish('pending')}
-                    className="px-5 py-2.5 rounded-xl bg-cyan-650 hover:bg-cyan-600 text-white font-bold text-xs flex items-center gap-1.5 transition-colors shadow-sm"
+                    className="px-5 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs flex items-center gap-1.5 transition-colors shadow-sm cursor-pointer"
                   >
                     <Check className="w-4 h-4" />
                     Publikasikan Iklan Gratis
@@ -724,7 +906,7 @@ export const PostFreeAdView: React.FC = () => {
 
               <div className="p-4 space-y-2">
                 <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">
-                  {category} {subcategory && `/ ${subcategory}`}
+                  {category} {subcategory && `/ {subcategory}`}
                 </span>
 
                 <h4 className="font-bold text-sm text-slate-900 truncate">
