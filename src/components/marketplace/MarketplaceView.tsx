@@ -2,29 +2,27 @@ import React, { useState, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
 import { ProductCard } from './ProductCard';
 import { ProductDetailModal } from './ProductDetailModal';
-import { Product, Advertisement, Merchant } from '../../types';
-import { Search, Filter, SlidersHorizontal, Store, Megaphone, ShoppingBag, X, Sparkles, ShieldCheck } from 'lucide-react';
+import { Product } from '../../types';
+import { Search, Filter, ShoppingBag, Store, ShieldCheck, X } from 'lucide-react';
 
 export const MarketplaceView: React.FC = () => {
   const {
     products,
-    ads,
-    merchants,
     categories,
     selectedCategory,
     setSelectedCategory,
     searchQuery,
     setSearchQuery,
-    activeSearchTypeTab,
-    setActiveSearchTypeTab,
     setSelectedMerchantId,
     navigate,
+    merchants,
   } = useApp();
 
   const [selectedProductDetail, setSelectedProductDetail] = useState<Product | null>(null);
-  const [sortBy, setSortBy] = useState<'terbaru' | 'terpopuler' | 'murah' | 'mahal'>('terpopuler');
+  const [sortBy, setSortBy] = useState<'terpopuler' | 'terbaru' | 'murah' | 'mahal'>('terpopuler');
   const [minPrice, setMinPrice] = useState<string>('');
   const [maxPrice, setMaxPrice] = useState<string>('');
+  const [activeSearchTypeTab, setActiveSearchTypeTab] = useState<'semua' | 'produk' | 'merchant'>('semua');
 
   const formatRupiahInput = (val: string) => {
     const numberString = val.replace(/[^0-9]/g, '');
@@ -35,12 +33,12 @@ export const MarketplaceView: React.FC = () => {
   // Filtered Products
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
-      const matchesCategory = !selectedCategory || p.category === selectedCategory;
+      const matchesCategory = !selectedCategory || p.category === selectedCategory || p.category === 'ALL';
       const matchesSearch =
         !searchQuery ||
         p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.shortDescription.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.merchantName.toLowerCase().includes(searchQuery.toLowerCase());
+        (p.merchantName && p.merchantName.toLowerCase().includes(searchQuery.toLowerCase()));
       
       const cleanMin = minPrice.replace(/\./g, '');
       const cleanMax = maxPrice.replace(/\./g, '');
@@ -58,35 +56,26 @@ export const MarketplaceView: React.FC = () => {
     });
   }, [products, selectedCategory, searchQuery, minPrice, maxPrice, sortBy]);
 
-  // Filtered Ads
-  const filteredAds = useMemo(() => {
-    return ads.filter((ad) => {
-      const matchesSearch =
-        !searchQuery ||
-        ad.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        ad.description.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesSearch && ad.status === 'published';
-    });
-  }, [ads, searchQuery]);
-
   // Filtered Merchants
   const filteredMerchants = useMemo(() => {
     return merchants.filter((m) => {
-      return (
+      const matchesSearch =
         !searchQuery ||
         m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        m.description.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+        m.description.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesSearch && m.verificationStatus === 'VERIFIED';
     });
   }, [merchants, searchQuery]);
 
   return (
-    <div className="py-10 bg-white text-slate-900 min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-        {/* Title Header */}
+    <div className="bg-slate-50 min-h-screen text-slate-900 pb-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        {/* Hero title header */}
         <div className="space-y-2">
-          <h1 className="text-3xl font-extrabold text-navy">Marketplace & Directory ADMS</h1>
-          <p className="text-slate-600 text-sm">
+          <h2 className="text-2xl sm:text-3xl font-black text-navy tracking-tight">
+            Marketplace & Directory ADMS
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-500 max-w-xl font-normal">
             Temukan ribuan produk digital, iklan promosi terverifikasi, dan merchant terbaik.
           </p>
         </div>
@@ -219,7 +208,6 @@ export const MarketplaceView: React.FC = () => {
               </div>
 
               {filteredProducts.length === 0 ? (
-                /* Section 39: Empty State */
                 <div className="bg-slate-50 border border-slate-200 rounded-2xl p-10 text-center space-y-3 shadow-sm">
                   <ShoppingBag className="w-12 h-12 text-slate-400 mx-auto" />
                   <h4 className="text-lg font-bold text-navy">Belum ada produk</h4>
@@ -256,7 +244,7 @@ export const MarketplaceView: React.FC = () => {
               <div className="flex items-center justify-between pb-2 border-b border-slate-200">
                 <h3 className="font-extrabold text-navy text-lg flex items-center gap-2">
                   <Store className="w-5 h-5 text-gold" />
-                  Merchant Terverifikasi ({filteredMerchants.length})
+                  Merchant Directory ({filteredMerchants.length})
                 </h3>
               </div>
 
@@ -274,7 +262,7 @@ export const MarketplaceView: React.FC = () => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1 font-bold text-navy text-sm">
                         <span className="truncate">{m.name}</span>
-                        {m.isVerified && <ShieldCheck className="w-4 h-4 text-gold shrink-0" />}
+                        {m.verificationStatus === 'VERIFIED' && <ShieldCheck className="w-4 h-4 text-gold shrink-0" />}
                       </div>
                       <p className="text-slate-500 text-xs truncate mt-0.5">{m.description}</p>
                     </div>
@@ -286,7 +274,6 @@ export const MarketplaceView: React.FC = () => {
         </div>
       </div>
 
-      {/* Product Detail Modal */}
       {selectedProductDetail && (
         <ProductDetailModal
           product={selectedProductDetail}

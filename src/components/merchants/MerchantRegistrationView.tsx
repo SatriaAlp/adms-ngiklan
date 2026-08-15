@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Store, Mail, Phone, User, Lock, UploadCloud, MapPin, CheckCircle2, ChevronRight, Check, Eye, EyeOff } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { api } from '../../services/apiClient';
 
 export const MerchantRegistrationView: React.FC = () => {
   const { navigate, addNotification } = useApp();
@@ -102,11 +103,23 @@ export const MerchantRegistrationView: React.FC = () => {
     e.preventDefault();
     if (validateForm()) {
       setIsSubmitting(true);
-      // Simulate API call to backend (will integrate with Prisma later)
-      setTimeout(() => {
-        setIsSubmitting(false);
+      try {
+        await api.registerMerchant({
+          fullName: formData.fullName,
+          email: formData.email,
+          whatsapp: formData.whatsapp,
+          storeName: formData.storeName,
+          storeUsername: formData.storeUsername,
+          category: formData.category,
+          description: formData.description,
+          address: formData.address,
+        });
         setIsSubmitted(true);
-      }, 1500);
+      } catch (error) {
+        addNotification('Gagal mendaftarkan merchant, silakan coba lagi', 'error');
+      } finally {
+        setIsSubmitting(false);
+      }
     } else {
       addNotification('Mohon periksa kembali form Anda', 'error');
       // Scroll to top
@@ -116,26 +129,101 @@ export const MerchantRegistrationView: React.FC = () => {
 
   if (isSubmitted) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-16 animate-in fade-in zoom-in duration-300">
-        <div className="bg-white rounded-3xl p-8 sm:p-12 border border-slate-200 shadow-sm text-center">
-          <div className="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Check className="w-12 h-12 text-emerald-500" />
+      <div className="max-w-3xl mx-auto px-4 py-10 animate-in fade-in zoom-in duration-300">
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="p-8 sm:p-10 text-center border-b border-slate-100">
+            <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-5">
+              <Check className="w-10 h-10 text-emerald-500" />
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-black text-navy mb-3">Pengajuan Merchant Berhasil</h2>
+            <p className="text-slate-600 mb-6 max-w-lg mx-auto leading-relaxed text-sm">
+              Terima kasih telah mendaftar. Data Anda sedang diproses untuk verifikasi oleh Admin ADMS. Proses ini biasanya memakan waktu 1x24 jam kerja.
+            </p>
+            <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-50 text-amber-700 font-bold border border-amber-200">
+              <span className="text-sm">Status:</span>
+              <span className="uppercase tracking-widest px-2 py-1 bg-amber-100 rounded-md text-amber-800 text-[10px]">Pending Verification</span>
+            </div>
           </div>
-          <h2 className="text-3xl font-black text-navy mb-4">Pengajuan Merchant Berhasil</h2>
-          <p className="text-slate-600 mb-8 max-w-lg mx-auto leading-relaxed">
-            Terima kasih telah mendaftar. Data Anda sedang diproses untuk verifikasi oleh Admin ADMS. Proses ini biasanya memakan waktu 1x24 jam kerja.
-          </p>
-          <div className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-amber-50 text-amber-700 font-bold border border-amber-200 mb-8">
-            <span>Status Merchant:</span>
-            <span className="uppercase tracking-widest px-2 py-1 bg-amber-100 rounded-md text-amber-800 text-xs">Pending</span>
-          </div>
-          <div>
-            <button
-              onClick={() => navigate('home')}
-              className="px-8 py-3 bg-navy hover:bg-navy/90 text-white font-bold rounded-xl transition-colors shadow-xs"
-            >
-              Kembali ke Beranda
-            </button>
+
+          <div className="p-6 sm:p-8 bg-slate-50 space-y-8">
+            <h3 className="text-lg font-black text-navy flex items-center gap-2 mb-2">
+              <Store className="w-5 h-5 text-cyan-500" />
+              Detail Pengajuan Anda
+            </h3>
+            
+            {/* Account Info */}
+            <div>
+              <h4 className="font-bold text-xs text-slate-400 uppercase tracking-wider mb-3">Informasi Akun</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm">
+                <div>
+                  <span className="block text-[11px] text-slate-500 mb-1">Nama Lengkap</span>
+                  <span className="font-bold text-slate-800 text-sm">{formData.fullName}</span>
+                </div>
+                <div>
+                  <span className="block text-[11px] text-slate-500 mb-1">Email Aktif</span>
+                  <span className="font-bold text-slate-800 text-sm">{formData.email}</span>
+                </div>
+                <div>
+                  <span className="block text-[11px] text-slate-500 mb-1">Nomor WhatsApp</span>
+                  <span className="font-bold text-slate-800 text-sm">{formData.whatsapp}</span>
+                </div>
+                <div>
+                  <span className="block text-[11px] text-slate-500 mb-1">Tanggal Pengajuan</span>
+                  <span className="font-bold text-slate-800 text-sm">{new Date().toLocaleDateString('id-ID')}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Store Info */}
+            <div>
+              <h4 className="font-bold text-xs text-slate-400 uppercase tracking-wider mb-3">Informasi Toko</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm">
+                <div className="sm:col-span-2 flex items-center gap-4 mb-2">
+                  {formData.logo && (
+                    <img 
+                      src={URL.createObjectURL(formData.logo)} 
+                      alt="Logo Toko" 
+                      className="w-16 h-16 rounded-xl border border-slate-200 object-cover"
+                    />
+                  )}
+                  <div>
+                    <span className="block text-[11px] text-slate-500 mb-1">Logo Toko</span>
+                    <span className="font-bold text-slate-800 text-sm">{formData.logo?.name || 'Terunggah'}</span>
+                  </div>
+                </div>
+                <div>
+                  <span className="block text-[11px] text-slate-500 mb-1">Nama Toko</span>
+                  <span className="font-bold text-slate-800 text-sm">{formData.storeName}</span>
+                </div>
+                <div>
+                  <span className="block text-[11px] text-slate-500 mb-1">Username / Slug</span>
+                  <span className="font-bold text-slate-800 text-sm">@{formData.storeUsername}</span>
+                </div>
+                <div>
+                  <span className="block text-[11px] text-slate-500 mb-1">Kategori Utama</span>
+                  <span className="font-bold text-slate-800 text-sm">{formData.category}</span>
+                </div>
+                <div>
+                  <span className="block text-[11px] text-slate-500 mb-1">Alamat / Kota</span>
+                  <span className="font-bold text-slate-800 text-sm">{formData.address}</span>
+                </div>
+                <div className="sm:col-span-2">
+                  <span className="block text-[11px] text-slate-500 mb-1.5">Deskripsi Toko</span>
+                  <p className="text-sm text-slate-700 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-100">
+                    {formData.description}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-4 flex justify-center">
+              <button
+                onClick={() => navigate('home')}
+                className="px-8 py-3.5 bg-navy hover:bg-navy/90 text-white font-bold rounded-xl transition-all shadow-md hover:-translate-y-0.5 active:scale-95"
+              >
+                Kembali ke Beranda
+              </button>
+            </div>
           </div>
         </div>
       </div>

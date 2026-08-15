@@ -55,17 +55,28 @@ export interface Category {
   productCount: number;
 }
 
+export interface ProductPackage {
+  id: string;
+  name: string;
+  price: number;
+  description?: string;
+  features: string[];
+  deliveryTime?: string;
+}
+
 export interface Product {
   id: string;
   title: string;
   slug: string;
-  category: CategorySlug;
+  category: string;
   categoryName: string;
   merchantId: string;
   merchantName: string;
   merchantLogo?: string;
+  priceType: 'FIXED' | 'STARTING_FROM' | 'CONTACT_US';
   price: number;
   discountPrice?: number;
+  packages?: ProductPackage[];
   rating: number;
   reviewCount: number;
   salesCount: number;
@@ -136,6 +147,7 @@ export interface AdPackage {
 export interface CartItem {
   product: Product;
   quantity: number;
+  selectedPackageId?: string;
 }
 
 export type PaymentMethod = 
@@ -163,6 +175,7 @@ export type PaymentStatus =
 
 export interface OrderItem {
   productId: string;
+  packageId?: string;
   productTitle: string;
   productThumbnail: string;
   price: number;
