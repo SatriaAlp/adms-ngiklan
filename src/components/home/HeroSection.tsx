@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { AdmsLogo } from '../common/AdmsLogo';
 import { Search, Sparkles, ArrowRight, PlusCircle, CheckCircle2, TrendingUp, ShieldCheck, Zap } from 'lucide-react';
+import { useDebounce } from '../../hooks/useDebounce';
 
 export const HeroSection: React.FC = () => {
   const { 
@@ -16,6 +17,16 @@ export const HeroSection: React.FC = () => {
     setPendingPostAd
   } = useApp();
   const [localSearch, setLocalSearch] = useState('');
+  const [showDropdown, setShowDropdown] = useState(false);
+  const debouncedSearch = useDebounce(localSearch, 300);
+
+  const searchResults = React.useMemo(() => {
+    if (!debouncedSearch) return [];
+    return products.filter(p => 
+      p.title.toLowerCase().includes(debouncedSearch.toLowerCase()) || 
+      p.category.toLowerCase().includes(debouncedSearch.toLowerCase())
+    ).slice(0, 4);
+  }, [debouncedSearch, products]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,7 +67,12 @@ export const HeroSection: React.FC = () => {
                 <input
                   type="text"
                   value={localSearch}
-                  onChange={(e) => setLocalSearch(e.target.value)}
+                  onChange={(e) => {
+                    setLocalSearch(e.target.value);
+                    setShowDropdown(true);
+                  }}
+                  onFocus={() => setShowDropdown(true)}
+                  onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
                   placeholder="Cari produk digital, jasa, atau iklan promosi..."
                   className="w-full bg-transparent px-2.5 py-1.5 text-white placeholder-slate-400 text-xs sm:text-sm font-medium focus:outline-none"
                 />
@@ -66,6 +82,42 @@ export const HeroSection: React.FC = () => {
                 >
                   Cari
                 </button>
+                
+                {/* Live Search Dropdown */}
+                {showDropdown && debouncedSearch && (
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden z-50 text-slate-900">
+                    {searchResults.length > 0 ? (
+                      <div className="flex flex-col">
+                        {searchResults.map(product => (
+                          <div 
+                            key={product.id}
+                            onClick={() => {
+                              setSearchQuery(product.title);
+                              navigate('marketplace');
+                            }}
+                            className="flex items-center gap-3 p-3 hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-b-0 transition-colors"
+                          >
+                            <img src={product.thumbnail} alt={product.title} className="w-10 h-10 rounded-lg object-cover" />
+                            <div className="flex flex-col flex-1 text-left">
+                              <span className="text-sm font-bold text-navy truncate">{product.title}</span>
+                              <span className="text-xs text-slate-500 capitalize">{product.category}</span>
+                            </div>
+                          </div>
+                        ))}
+                        <div 
+                          onClick={handleSearchSubmit}
+                          className="p-3 text-center text-xs font-bold text-emerald-600 hover:bg-emerald-50 cursor-pointer bg-slate-50"
+                        >
+                          Lihat Semua Hasil Pencarian
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-4 text-center text-sm text-slate-500">
+                        Tidak ditemukan hasil untuk "{debouncedSearch}"
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
               <div className="flex flex-wrap items-center gap-1.5 mt-2.5 text-[11px] text-slate-400 justify-center lg:justify-start">
                 <span className="font-semibold text-slate-400">Pencarian Populer:</span>

@@ -80,6 +80,7 @@ model Product {
   shortDescription String   @db.Text
   fullDescription String    @db.Text
   status          ProductStatus @default(DRAFT)
+  priceType       PriceType @default(FIXED)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
@@ -87,6 +88,26 @@ model Product {
   category        Category  @relation(fields: [categoryId], references: [id])
   orderItems      OrderItem[]
   reviews         Review[]
+  packages        ProductPackage[]
+}
+
+enum PriceType {
+  FIXED
+  STARTING_FROM
+  CONTACT_US
+}
+
+model ProductPackage {
+  id              String    @id @default(uuid())
+  productId       String
+  name            String
+  price           Decimal   @db.Decimal(10, 2)
+  description     String?   @db.Text
+  features        String?   @db.Text // Store as JSON array string or comma separated
+  deliveryTime    String?
+  
+  product         Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  orderItems      OrderItem[]
 }
 
 enum ProductStatus {
@@ -138,12 +159,14 @@ model OrderItem {
   id              String    @id @default(uuid())
   orderId         String
   productId       String
+  packageId       String?
   price           Decimal   @db.Decimal(10, 2)
   quantity        Int
   downloadUrl     String?
 
   order           Order     @relation(fields: [orderId], references: [id])
   product         Product   @relation(fields: [productId], references: [id])
+  package         ProductPackage? @relation(fields: [packageId], references: [id])
 }
 
 model Review {

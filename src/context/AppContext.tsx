@@ -23,6 +23,8 @@ import {
 } from '../data/mockData';
 import { paymentService } from '../services/paymentService';
 import { evaluateAdContent } from '../utils/moderationEngine';
+import { api } from '../services/apiClient';
+
 interface NavigationParams {
   productId?: string;
   merchantId?: string;
@@ -191,10 +193,77 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [activeSearchTypeTab, setActiveSearchTypeTab] = useState<'semua' | 'produk' | 'iklan' | 'merchant'>('semua');
 
   const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
-  const [categories] = useState<Category[]>(INITIAL_CATEGORIES);
+  const [categories, setCategories] = useState<Category[]>(INITIAL_CATEGORIES);
   const [merchants, setMerchants] = useState<Merchant[]>(INITIAL_MERCHANTS);
   const [ads, setAds] = useState<Advertisement[]>(INITIAL_ADVERTISEMENTS);
   const [adPackages, setAdPackages] = useState<AdPackage[]>(INITIAL_AD_PACKAGES);
+
+  const fetchProducts = async () => {
+    try {
+      const backendProducts = await api.getPublicProducts();
+      if (backendProducts && backendProducts.length > 0) {
+        const mappedProducts: Product[] = backendProducts.map(bp => ({
+          id: bp.id,
+          title: bp.title,
+          slug: bp.slug,
+          category: (bp.category?.slug || 'lainnya') as any,
+          categoryName: bp.category?.name || 'Lainnya',
+          merchantId: bp.merchant?.id || '',
+          merchantName: bp.merchant?.name || '',
+          merchantLogo: bp.merchant?.logo || '',
+          priceType: bp.priceType || 'FIXED',
+          price: Number(bp.price) || 0,
+          discountPrice: bp.discountPrice ? Number(bp.discountPrice) : undefined,
+          rating: 0,
+          reviewCount: 0,
+          salesCount: 0,
+          thumbnail: bp.thumbnail || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&auto=format&fit=crop&q=80',
+          images: [bp.thumbnail || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&auto=format&fit=crop&q=80'],
+          shortDescription: bp.shortDescription || '',
+          fullDescription: bp.fullDescription || '',
+          features: ['Lisensi Penggunaan', 'Akses Seumur Hidup'],
+          specifications: { Format: 'ZIP / PDF' },
+          status: bp.status === 'ACTIVE' || bp.status === 'APPROVED' ? 'published' : 'pending',
+          packages: bp.packages ? bp.packages.map((pkg: any) => ({
+            id: pkg.id,
+            name: pkg.name,
+            price: Number(pkg.price) || 0,
+            description: pkg.description,
+            features: pkg.features ? JSON.parse(pkg.features) : [],
+            deliveryTime: pkg.deliveryTime
+          })) : [],
+          createdAt: bp.createdAt
+        }));
+        setProducts(mappedProducts);
+      }
+    } catch (error) {
+      console.error('Failed to fetch public products', error);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const backendCategories = await api.getCategories();
+      if (backendCategories && backendCategories.length > 0) {
+        const mappedCats = backendCategories.map(c => ({
+          id: c.id,
+          name: c.name,
+          slug: c.slug,
+          iconName: c.iconName || 'Layout',
+          description: c.description || '',
+          productCount: c._count?.products || 0
+        }));
+        setCategories(mappedCats);
+      }
+    } catch (error) {
+      console.error('Failed to fetch categories', error);
+    }
+  };
+
+  React.useEffect(() => {
+    fetchProducts();
+    fetchCategories();
+  }, []);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [wishlist, setWishlist] = useState<string[]>(['prod-1']);
   const [orders, setOrders] = useState<Order[]>(INITIAL_ORDERS);
@@ -317,46 +386,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
-  const createProduct = (productData: Partial<Product>) => {
-    const moderation = evaluateAdContent(
-      productData.title || '',
-      (productData.shortDescription || '') + ' ' + (productData.fullDescription || ''),
-      productData.category || ''
-    );
-
-    if (moderation.recommendedAction === 'REJECT') {
-      addNotification('Produk ditolak: ' + moderation.reason, 'error');
-      return;
-    }
-
-    const newProduct: Product = {
-      id: `prod-${Date.now()}`,
-      title: productData.title || 'Produk Digital Baru',
-      slug: (productData.title || 'produk').toLowerCase().replace(/\s+/g, '-'),
-      category: productData.category || 'template',
-      categoryName: productData.categoryName || 'Template',
-      merchantId: currentUser.merchantId || 'm-1',
-      merchantName: 'Armada Creative',
-      price: productData.price || 50000,
-      discountPrice: productData.discountPrice,
-      rating: 5.0,
-      reviewCount: 0,
-      salesCount: 0,
-      thumbnail: productData.thumbnail || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&auto=format&fit=crop&q=80',
-      images: [productData.thumbnail || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&auto=format&fit=crop&q=80'],
-      shortDescription: productData.shortDescription || 'Deskripsi singkat produk digital.',
-      fullDescription: productData.fullDescription || 'Deskripsi lengkap produk digital ADMS.',
-      features: productData.features || ['Lisensi Penggunaan', 'Akses Seumur Hidup'],
-      specifications: productData.specifications || { Format: 'ZIP / PDF' },
-      status: moderation.recommendedAction === 'PENDING' ? 'pending' : 'published',
-      createdAt: new Date().toISOString(),
-    };
-    setProducts((prev) => [newProduct, ...prev]);
-    
-    if (moderation.recommendedAction === 'PENDING') {
-      addNotification('Produk ditahan: ' + moderation.reason, 'warning');
-    } else {
-      addNotification('Produk berhasil dikirim dan ditayangkan secara publik!', 'success');
+  const createProduct = async (productData: Partial<Product>) => {
+    try {
+      addNotification('Memproses penambahan produk...', 'info');
+      await api.createMerchantProduct({
+        title: productData.title,
+        price: productData.price,
+        discountPrice: productData.discountPrice,
+        shortDescription: productData.shortDescription,
+        fullDescription: productData.fullDescription,
+        categoryId: null, // Let backend fallback to default category if not exact ID
+      });
+      addNotification('Produk berhasil dikirim dan menunggu verifikasi Admin!', 'success');
+      await fetchProducts(); // Refresh the list
+    } catch (error) {
+      addNotification('Gagal membuat produk ke server', 'error');
     }
   };
 

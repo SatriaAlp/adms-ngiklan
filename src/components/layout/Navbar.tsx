@@ -72,6 +72,17 @@ export const Navbar: React.FC = () => {
               >
                 Home
               </button>
+              
+              <button
+                onClick={() => handleNav('iklan-gratis')}
+                className={`px-3.5 py-2 rounded-lg transition-colors ${
+                  activeTab === 'iklan-gratis'
+                    ? 'text-slate-900 bg-slate-100 font-bold'
+                    : 'hover:text-slate-900 hover:bg-slate-50'
+                }`}
+              >
+                Iklan Gratis
+              </button>
               <button
                 onClick={() => handleNav('bantuan')}
                 className={`px-3.5 py-2 rounded-lg transition-colors ${
@@ -233,6 +244,26 @@ export const Navbar: React.FC = () => {
                 Home
               </button>
               <button
+                onClick={() => handleNav('marketplace')}
+                className={`p-3 rounded-xl text-left text-xs font-bold border ${
+                  activeTab === 'marketplace'
+                    ? 'bg-navy border-navy text-white'
+                    : 'bg-slate-50 border-slate-200 text-slate-700'
+                }`}
+              >
+                Marketplace
+              </button>
+              <button
+                onClick={() => handleNav('iklan-gratis')}
+                className={`p-3 rounded-xl text-left text-xs font-bold border ${
+                  activeTab === 'iklan-gratis'
+                    ? 'bg-navy border-navy text-white'
+                    : 'bg-slate-50 border-slate-200 text-slate-700'
+                }`}
+              >
+                Iklan Gratis
+              </button>
+              <button
                 onClick={() => handleNav('bantuan')}
                 className={`p-3 rounded-xl text-left text-xs font-bold border ${
                   activeTab === 'bantuan'
@@ -240,7 +271,7 @@ export const Navbar: React.FC = () => {
                     : 'bg-slate-50 border-slate-200 text-slate-700'
                 }`}
               >
-                Pusat Bantuan
+                Bantuan
               </button>
             </div>
 

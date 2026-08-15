@@ -323,7 +323,7 @@ export const ClassifiedsCatalogView: React.FC = () => {
             </div>
 
             {/* VIP Sponsored Featured Banner Row */}
-            {selectedCat === 'ALL' && filterType !== 'FREE' && (
+            {selectedCat === 'ALL' && (
               <div className="space-y-3">
                 <h4 className="font-extrabold text-xs text-amber-600 uppercase tracking-wider flex items-center gap-1.5">
                   <Sparkles className="w-4 h-4 fill-amber-500" /> Sponsor Premium Terpopuler
