@@ -17,6 +17,7 @@ export const HeroSection: React.FC = () => {
     setPendingPostAd
   } = useApp();
   const [localSearch, setLocalSearch] = useState('');
+  const [currentSlide, setCurrentSlide] = useState(0);
   const [showDropdown, setShowDropdown] = useState(false);
   const debouncedSearch = useDebounce(localSearch, 300);
 
@@ -27,6 +28,109 @@ export const HeroSection: React.FC = () => {
       p.category.toLowerCase().includes(debouncedSearch.toLowerCase())
     ).slice(0, 4);
   }, [debouncedSearch, products]);
+
+  const slides = [
+    {
+      title: "Ekosistem ADMS Live",
+      subtitle: "Statistik Platform Real-Time",
+      badge: "Live Monitor",
+      badgeColor: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
+      content: (
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-white/5 border border-white/5 p-3 rounded-xl hover:border-white/10 transition-colors">
+              <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Produk Digital</p>
+              <p className="text-2xl font-black text-white mt-0.5">{products.length * 150}+</p>
+              <span className="text-[9px] text-emerald-400 font-semibold mt-1 inline-block flex items-center gap-0.5">
+                <TrendingUp className="w-2.5 h-2.5" /> Instan Download
+              </span>
+            </div>
+            <div className="bg-white/5 border border-white/5 p-3 rounded-xl hover:border-white/10 transition-colors">
+              <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Iklan Aktif</p>
+              <p className="text-2xl font-black text-white mt-0.5">{ads.length * 80}+</p>
+              <span className="text-[9px] text-emerald-400 font-semibold mt-1 inline-block flex items-center gap-0.5">
+                ✓ Free & Sponsor
+              </span>
+            </div>
+          </div>
+          <div className="bg-white/5 border border-white/5 p-2.5 rounded-xl flex items-center gap-3 hover:border-white/10 transition-colors">
+            <img
+              src="https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=150&auto=format&fit=crop&q=80"
+              alt="Canva Template"
+              className="w-10 h-10 rounded-lg object-cover shrink-0"
+            />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1 text-[8px] font-bold text-gold">
+                <span>BEST SELLER</span>
+                <span>•</span>
+                <span className="text-emerald-400">⭐ 4.9</span>
+              </div>
+              <h5 className="text-[11px] font-bold text-white truncate mt-0.5">365 Hari Social Media Content Calendar</h5>
+              <p className="text-[11px] text-white font-black mt-0.5">Rp49.000 <span className="line-through text-slate-500 font-normal text-[8px]">Rp99.000</span></p>
+            </div>
+          </div>
+        </div>
+      )
+    },
+    {
+      title: "Promo Spesial Member",
+      subtitle: "Cashback & Diskon Terbatas",
+      badge: "Promo Merchant",
+      badgeColor: "bg-gold/20 text-gold border-gold/30",
+      content: (
+        <div className="space-y-4">
+          <div className="bg-gradient-to-r from-emerald-500/20 to-teal-500/20 p-4 rounded-xl border border-emerald-500/20 text-center">
+            <span className="px-2.5 py-1 rounded-full bg-emerald-500 text-slate-950 font-black text-[10px] tracking-wider uppercase">DISKON 50%</span>
+            <h4 className="text-base font-black text-white mt-2">Source Code & Canva Kit</h4>
+            <p className="text-slate-300 text-[10px] mt-1">Dapatkan diskon potongan langsung untuk pembelian produk pertama dengan kode promo: <strong className="text-gold font-mono">ADMSBARU</strong></p>
+          </div>
+          <div className="bg-white/5 border border-white/5 p-2.5 rounded-xl flex items-center gap-3">
+            <img
+              src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=150&auto=format&fit=crop&q=80"
+              alt="Promo Ad"
+              className="w-10 h-10 rounded-lg object-cover shrink-0"
+            />
+            <div className="flex-1 min-w-0">
+              <h5 className="text-[11px] font-bold text-white truncate">Paket Premium Ads Exchange</h5>
+              <p className="text-[10px] text-slate-300">Tayang 30 hari di Homepage & prioritas teratas pencarian.</p>
+            </div>
+          </div>
+        </div>
+      )
+    },
+    {
+      title: "Pasang Iklan Tanpa Biaya",
+      subtitle: "Iklan Baris Klasifikasi Rp 0",
+      badge: "Sponsor Ad",
+      badgeColor: "bg-cyan-500/20 text-cyan-400 border-cyan-500/30",
+      content: (
+        <div className="space-y-4">
+          <div className="bg-white/5 border border-white/5 p-4 rounded-xl space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+              <span className="text-[10px] font-bold text-slate-300">Promosikan Jasa / Produk Anda</span>
+            </div>
+            <p className="text-[11px] text-slate-300 leading-relaxed">
+              Daftarkan diri Anda hari ini dan pasang iklan gratis tanpa komisi. Iklan Anda akan dilihat oleh ribuan visitor setiap harinya secara organik.
+            </p>
+            <button
+              onClick={() => navigate('pasang-iklan-gratis')}
+              className="w-full py-2 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs rounded-lg transition-all active:scale-[0.98]"
+            >
+              Mulai Pasang Iklan Sekarang
+            </button>
+          </div>
+        </div>
+      )
+    }
+  ];
+
+  React.useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % slides.length);
+    }, 4500);
+    return () => clearInterval(timer);
+  }, [slides.length]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -165,59 +269,41 @@ export const HeroSection: React.FC = () => {
             </div>
           </div>
 
-          {/* Right Floating Dashboard Mockup (More Compact) */}
-          <div className="lg:col-span-5 relative mt-6 lg:mt-0">
-            {/* Underlay Floating Stats Card */}
-            <div className="animate-float relative bg-white/5 backdrop-blur-md text-white p-5 rounded-2xl border border-white/10 shadow-2xl space-y-4">
+          {/* Right Floating Slideshow Mockup (Automated Slideshow) */}
+          <div className="lg:col-span-5 relative mt-6 lg:mt-0 w-full min-h-[300px]">
+            {/* Slide Container */}
+            <div className="relative bg-white/5 backdrop-blur-md text-white p-5 rounded-2xl border border-white/10 shadow-2xl space-y-4 transition-all duration-500 overflow-hidden">
               {/* Card Header Preview */}
               <div className="flex items-center justify-between pb-3 border-b border-white/10">
                 <div className="flex items-center gap-2">
                   <AdmsLogo variant="symbol" size="sm" />
                   <div>
-                    <h4 className="font-bold text-white text-xs">Ekosistem ADMS Live</h4>
-                    <p className="text-[9px] text-slate-400 font-medium">Statistik Platform Real-Time</p>
+                    <h4 className="font-bold text-white text-xs">{slides[currentSlide].title}</h4>
+                    <p className="text-[9px] text-slate-400 font-medium">{slides[currentSlide].subtitle}</p>
                   </div>
                 </div>
-                <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[9px] font-bold border border-emerald-500/30 flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                  Live Monitor
+                <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold border flex items-center gap-1 ${slides[currentSlide].badgeColor}`}>
+                  <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse"></span>
+                  {slides[currentSlide].badge}
                 </span>
               </div>
 
-              {/* Stat Highlights */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-white/5 border border-white/5 p-3 rounded-xl hover:border-white/10 transition-colors">
-                  <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Produk Digital</p>
-                  <p className="text-2xl font-black text-white mt-0.5">{products.length * 150}+</p>
-                  <span className="text-[9px] text-emerald-400 font-semibold mt-1 inline-block flex items-center gap-0.5">
-                    <TrendingUp className="w-2.5 h-2.5" /> Instan Download
-                  </span>
-                </div>
-                <div className="bg-white/5 border border-white/5 p-3 rounded-xl hover:border-white/10 transition-colors">
-                  <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Iklan Aktif</p>
-                  <p className="text-2xl font-black text-white mt-0.5">{ads.length * 80}+</p>
-                  <span className="text-[9px] text-emerald-400 font-semibold mt-1 inline-block flex items-center gap-0.5">
-                    ✓ Free & Sponsor
-                  </span>
-                </div>
+              {/* Slide Content */}
+              <div className="transition-all duration-300 transform translate-x-0 opacity-100">
+                {slides[currentSlide].content}
               </div>
 
-              {/* Sample Product Showcase Widget */}
-              <div className="bg-white/5 border border-white/5 p-2.5 rounded-xl flex items-center gap-3 hover:border-white/10 transition-colors">
-                <img
-                  src="https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=150&auto=format&fit=crop&q=80"
-                  alt="Canva Template"
-                  className="w-10 h-10 rounded-lg object-cover shrink-0"
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1 text-[8px] font-bold text-gold">
-                    <span>BEST SELLER</span>
-                    <span>•</span>
-                    <span className="text-emerald-400">⭐ 4.9</span>
-                  </div>
-                  <h5 className="text-[11px] font-bold text-white truncate mt-0.5">365 Hari Social Media Content Calendar</h5>
-                  <p className="text-[11px] text-white font-black mt-0.5">Rp49.000 <span className="line-through text-slate-500 font-normal text-[8px]">Rp99.000</span></p>
-                </div>
+              {/* Slider dots */}
+              <div className="flex items-center justify-center gap-1.5 pt-2">
+                {slides.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentSlide(index)}
+                    className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                      index === currentSlide ? 'bg-emerald-400 w-4' : 'bg-white/20'
+                    }`}
+                  ></button>
+                ))}
               </div>
             </div>
 

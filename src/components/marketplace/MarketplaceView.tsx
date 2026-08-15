@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
 import { ProductCard } from './ProductCard';
-import { ProductDetailModal } from './ProductDetailModal';
+
 import { Product } from '../../types';
-import { Search, Filter, Store, X, SlidersHorizontal, Megaphone, Monitor, TrendingUp, Zap, Share2, Briefcase, MapPin, SearchX } from 'lucide-react';
+import { Search, Filter, ShoppingBag, Store, ShieldCheck, X } from 'lucide-react';
 
 export const MarketplaceView: React.FC = () => {
   const {
@@ -13,27 +13,21 @@ export const MarketplaceView: React.FC = () => {
     setSelectedCategory,
     searchQuery,
     setSearchQuery,
+    setSelectedMerchantId,
     navigate,
+    merchants,
   } = useApp();
 
-  const [selectedProductDetail, setSelectedProductDetail] = useState<Product | null>(null);
+  
   const [sortBy, setSortBy] = useState<'terpopuler' | 'terbaru' | 'murah' | 'mahal'>('terpopuler');
   const [minPrice, setMinPrice] = useState<string>('');
   const [maxPrice, setMaxPrice] = useState<string>('');
-  const [showMobileFilter, setShowMobileFilter] = useState(false);
+  const [activeSearchTypeTab, setActiveSearchTypeTab] = useState<'semua' | 'produk' | 'merchant'>('semua');
 
-  // Icon Mapping for Categories
-  const getCategoryIcon = (slug: string) => {
-    switch (slug) {
-      case 'digital-ads': return <Megaphone className="w-6 h-6" />;
-      case 'website-development': return <Monitor className="w-6 h-6" />;
-      case 'marketing-distribution': return <TrendingUp className="w-6 h-6" />;
-      case 'automation-blast': return <Zap className="w-6 h-6" />;
-      case 'social-media': return <Share2 className="w-6 h-6" />;
-      case 'legal-bisnis': return <Briefcase className="w-6 h-6" />;
-      case 'layanan-offline': return <MapPin className="w-6 h-6" />;
-      default: return <Store className="w-6 h-6" />;
-    }
+  const formatRupiahInput = (val: string) => {
+    const numberString = val.replace(/[^0-9]/g, '');
+    if (!numberString) return '';
+    return new Intl.NumberFormat('id-ID').format(Number(numberString));
   };
 
   // Filtered Products
@@ -44,139 +38,116 @@ export const MarketplaceView: React.FC = () => {
         !searchQuery ||
         p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.shortDescription.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.categoryName.toLowerCase().includes(searchQuery.toLowerCase());
+        (p.merchantName && p.merchantName.toLowerCase().includes(searchQuery.toLowerCase()));
       
-      const price = p.discountPrice || p.price;
-      const matchesMinPrice = !minPrice || price >= Number(minPrice);
-      const matchesMaxPrice = !maxPrice || price <= Number(maxPrice);
+      const cleanMin = minPrice.replace(/\./g, '');
+      const cleanMax = maxPrice.replace(/\./g, '');
+      
+      const matchesMinPrice = !minPrice || (p.discountPrice || p.price) >= Number(cleanMin);
+      const matchesMaxPrice = !maxPrice || (p.discountPrice || p.price) <= Number(cleanMax);
 
       return matchesCategory && matchesSearch && matchesMinPrice && matchesMaxPrice;
     }).sort((a, b) => {
       if (sortBy === 'terbaru') return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      // Mock popularity sorting for now, using ID length or random for demo
-      if (sortBy === 'terpopuler') return a.title.length - b.title.length;
+      if (sortBy === 'terpopuler') return b.salesCount - a.salesCount;
       if (sortBy === 'murah') return (a.discountPrice || a.price) - (b.discountPrice || b.price);
       if (sortBy === 'mahal') return (b.discountPrice || b.price) - (a.discountPrice || a.price);
       return 0;
     });
   }, [products, selectedCategory, searchQuery, minPrice, maxPrice, sortBy]);
 
-  // Featured Products (Manual pick for demo)
-  const popularTitles = ['Google Ads', 'Instagram Ads', 'Landing Page Conversion', 'Website / Company Profile Corporate', 'Optimasi SEO Website / Google Index', 'Kelola Sosmed', 'WhatsApp Blast', 'Sebar Brosur'];
-  const popularProducts = products.filter(p => popularTitles.includes(p.title)).slice(0, 4);
+  // Filtered Merchants
+  const filteredMerchants = useMemo(() => {
+    return merchants.filter((m) => {
+      const matchesSearch =
+        !searchQuery ||
+        m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        m.description.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesSearch && m.verificationStatus === 'VERIFIED';
+    });
+  }, [merchants, searchQuery]);
 
   return (
     <div className="bg-slate-50 min-h-screen text-slate-900 pb-20">
-      
-      {/* 1. HERO SECTION */}
-      <div className="bg-navy relative overflow-hidden">
-        {/* Abstract Background shapes */}
-        <div className="absolute top-0 left-0 w-full h-full overflow-hidden opacity-20 pointer-events-none">
-          <div className="absolute -top-40 -right-40 w-96 h-96 bg-gold rounded-full mix-blend-multiply filter blur-3xl opacity-50"></div>
-          <div className="absolute -bottom-40 -left-20 w-80 h-80 bg-rose-500 rounded-full mix-blend-multiply filter blur-3xl opacity-50"></div>
-        </div>
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24 relative z-10 text-center">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-6 leading-tight">
-            Solusi Digital & Bisnis <br className="hidden md:block"/> dalam Satu Marketplace
-          </h1>
-          <p className="text-slate-300 text-base md:text-lg max-w-3xl mx-auto mb-10 leading-relaxed">
-            Temukan layanan digital marketing, website, SEO, social media, automation, legalitas, dan kebutuhan bisnis lainnya dari tim profesional ADMS.
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        {/* Hero title header */}
+        <div className="space-y-2">
+          <h2 className="text-2xl sm:text-3xl font-black text-navy tracking-tight">
+            Marketplace & Directory ADMS
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-500 max-w-xl font-normal">
+            Temukan ribuan produk digital, iklan promosi terverifikasi, dan merchant terbaik.
           </p>
-          
-          {/* Main Search Bar in Hero */}
-          <div className="max-w-3xl mx-auto bg-white rounded-2xl p-2 flex items-center shadow-2xl relative">
-            <Search className="w-6 h-6 text-slate-400 ml-4 shrink-0" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cari layanan yang Anda butuhkan... (Contoh: Google Ads, SEO, Website)"
-              className="w-full bg-transparent border-none pl-4 pr-4 py-3 text-slate-900 focus:outline-none focus:ring-0 placeholder-slate-400"
-            />
-            <button
-              onClick={() => {
-                document.getElementById('product-section')?.scrollIntoView({ behavior: 'smooth' });
-              }}
-              className="bg-rose-600 hover:bg-rose-700 text-white font-bold px-6 py-3 rounded-xl transition-colors whitespace-nowrap hidden sm:block"
-            >
-              Jelajahi Layanan
-            </button>
-          </div>
         </div>
-      </div>
 
-      {/* 2. KATEGORI POPULER */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-20 mb-16">
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 sm:gap-4">
-          {categories.slice(0, 7).map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => {
-                setSelectedCategory(cat.slug);
-                document.getElementById('product-section')?.scrollIntoView({ behavior: 'smooth' });
-              }}
-              className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md hover:border-navy transition-all flex flex-col items-center justify-center gap-3 group text-center h-full"
-            >
-              <div className="w-12 h-12 rounded-xl bg-slate-50 group-hover:bg-navy text-slate-600 group-hover:text-white flex items-center justify-center transition-colors">
-                {getCategoryIcon(cat.slug)}
+        {/* 1. FILTER PENCARIAN (AT THE TOP) */}
+        <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-5 space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+            <span className="font-bold text-navy text-sm flex items-center gap-2">
+              <Filter className="w-4 h-4 text-gold" /> Filter Pencarian
+            </span>
+            {(selectedCategory || minPrice || maxPrice) && (
+              <button
+                onClick={() => {
+                  setSelectedCategory(null);
+                  setMinPrice('');
+                  setMaxPrice('');
+                }}
+                className="text-xs text-rose-600 hover:underline"
+              >
+                Reset
+              </button>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Category Filter */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Kategori</label>
+              <select
+                value={selectedCategory || ''}
+                onChange={(e) => setSelectedCategory(e.target.value || null)}
+                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs text-slate-900 focus:outline-none focus:border-gold"
+              >
+                <option value="">Semua Kategori</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.slug}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Price Range */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Rentang Harga (Rp)</label>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <input
+                  type="text"
+                  placeholder="Min"
+                  value={minPrice}
+                  onChange={(e) => setMinPrice(formatRupiahInput(e.target.value))}
+                  className="bg-white border border-slate-300 rounded-xl p-2 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-gold"
+                />
+                <input
+                  type="text"
+                  placeholder="Max"
+                  value={maxPrice}
+                  onChange={(e) => setMaxPrice(formatRupiahInput(e.target.value))}
+                  className="bg-white border border-slate-300 rounded-xl p-2 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-gold"
+                />
               </div>
-              <span className="font-bold text-xs text-slate-700 group-hover:text-navy transition-colors">{cat.name}</span>
-            </button>
-          ))}
-        </div>
-      </div>
+            </div>
 
-      {/* 3. PRODUK POPULER SECTION */}
-      {!searchQuery && !selectedCategory && popularProducts.length > 0 && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-16">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-black text-navy">Layanan Paling Populer</h2>
-            <button
-              onClick={() => document.getElementById('product-section')?.scrollIntoView({ behavior: 'smooth' })}
-              className="text-sm font-bold text-rose-600 hover:text-rose-700 hover:underline"
-            >
-              Lihat Semua
-            </button>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-            {popularProducts.map((p) => (
-              <ProductCard
-                key={p.id}
-                product={p}
-                onOpenDetail={(product) => setSelectedProductDetail(product)}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* 4. MAIN MARKETPLACE SECTION */}
-      <div id="product-section" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 scroll-mt-24">
-        
-        {/* Header Section (Title & Mobile Filter Button) */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-          <div>
-            <h2 className="text-2xl font-black text-navy">
-              {searchQuery ? 'Hasil Pencarian' : selectedCategory ? 'Layanan Kategori Ini' : 'Semua Layanan'}
-            </h2>
-            <p className="text-slate-500 text-sm mt-1">Menampilkan {filteredProducts.length} layanan terbaik untuk Anda.</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setShowMobileFilter(true)}
-              className="lg:hidden flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-4 py-2 font-bold text-sm text-slate-700 shadow-sm"
-            >
-              <Filter className="w-4 h-4" /> Filter
-            </button>
-            <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-4 py-2 shadow-sm shrink-0">
-              <span className="text-xs text-slate-500 hidden sm:block">Urutkan:</span>
+            {/* Sorting Filter */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Urutkan Berdasarkan</label>
               <select
                 value={sortBy}
                 onChange={(e: any) => setSortBy(e.target.value)}
-                className="bg-transparent text-sm font-bold text-slate-700 focus:outline-none focus:ring-0 appearance-none pr-4"
+                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs text-slate-900 focus:outline-none focus:border-gold"
               >
-                <option value="terpopuler">Terpopuler</option>
+                <option value="terpopuler">Terpopuler & Terjual Banyak</option>
                 <option value="terbaru">Terbaru Ditambahkan</option>
                 <option value="murah">Harga Terendah</option>
                 <option value="mahal">Harga Tertinggi</option>
@@ -185,171 +156,123 @@ export const MarketplaceView: React.FC = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          
-          {/* Sidebar Filter (Desktop) */}
-          <div className="hidden lg:block lg:col-span-3 space-y-6">
-            <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-6 space-y-6 sticky top-24">
-              <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-                <span className="font-bold text-navy text-base flex items-center gap-2">
-                  <SlidersHorizontal className="w-4 h-4" /> Filter Pencarian
-                </span>
-                {(selectedCategory || minPrice || maxPrice) && (
+        {/* 2. GLOBAL SEARCH BAR */}
+        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3 flex flex-col sm:flex-row items-center gap-3 shadow-md">
+          <div className="relative flex-1 w-full flex items-center">
+            <Search className="w-5 h-5 text-slate-400 ml-3 absolute pointer-events-none" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Cari produk, jasa, iklan, atau merchant..."
+              className="w-full bg-white border border-slate-300 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-gold placeholder-slate-400"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+
+          {/* Search Tab Selector (Semua | Produk | Merchant) */}
+          <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 shrink-0 w-full sm:w-auto">
+            {(['semua', 'produk', 'merchant'] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveSearchTypeTab(tab as any)}
+                className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-bold capitalize transition-all ${
+                  activeSearchTypeTab === tab
+                    ? 'bg-navy text-white shadow-sm'
+                    : 'text-slate-600 hover:text-navy'
+                }`}
+              >
+                {tab === 'produk' ? 'Produk Digital' : tab === 'merchant' ? 'Merchant Directory' : 'Semua'}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Main Content Area (Stack Layout) */}
+        <div className="space-y-10">
+          {/* 3. PRODUK SECTION */}
+          {(activeSearchTypeTab === 'semua' || activeSearchTypeTab === 'produk') && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+                <h3 className="font-extrabold text-navy text-lg flex items-center gap-2">
+                  <ShoppingBag className="w-5 h-5 text-gold" />
+                  Produk Digital ({filteredProducts.length})
+                </h3>
+              </div>
+
+              {filteredProducts.length === 0 ? (
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-10 text-center space-y-3 shadow-sm">
+                  <ShoppingBag className="w-12 h-12 text-slate-400 mx-auto" />
+                  <h4 className="text-lg font-bold text-navy">Belum ada produk</h4>
+                  <p className="text-slate-500 text-xs">Produk yang Anda cari belum tersedia atau tidak cocok dengan filter.</p>
                   <button
                     onClick={() => {
                       setSelectedCategory(null);
+                      setSearchQuery('');
                       setMinPrice('');
                       setMaxPrice('');
                     }}
-                    className="text-xs font-bold text-rose-600 hover:underline"
+                    className="bg-navy hover:bg-navy/90 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-colors inline-block mt-2"
                   >
-                    Reset
+                    Kembali ke Marketplace
                   </button>
-                )}
-              </div>
-
-              {/* Category Filter */}
-              <div className="space-y-3">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Kategori Layanan</label>
-                <div className="space-y-1 text-sm">
-                  <button
-                    onClick={() => setSelectedCategory(null)}
-                    className={`w-full text-left px-3 py-2.5 rounded-xl transition-colors font-medium flex items-center justify-between ${
-                      !selectedCategory ? 'bg-navy/5 text-navy font-bold' : 'text-slate-600 hover:bg-slate-50'
-                    }`}
-                  >
-                    <span>Semua Kategori</span>
-                  </button>
-                  {categories.map((cat) => (
-                    <button
-                      key={cat.id}
-                      onClick={() => setSelectedCategory(cat.slug)}
-                      className={`w-full text-left px-3 py-2.5 rounded-xl transition-colors font-medium flex items-center justify-between ${
-                        selectedCategory === cat.slug ? 'bg-navy/5 text-navy font-bold' : 'text-slate-600 hover:bg-slate-50'
-                      }`}
-                    >
-                      <span>{cat.name}</span>
-                    </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredProducts.map((p) => (
+                    <ProductCard
+                      key={p.id}
+                      product={p}
+                      
+                    />
                   ))}
                 </div>
-              </div>
-
-              {/* Price Filter */}
-              <div className="space-y-3 pt-4 border-t border-slate-100">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Harga Layanan (Rp)</label>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <input
-                    type="number"
-                    placeholder="Minimal"
-                    value={minPrice}
-                    onChange={(e) => setMinPrice(e.target.value)}
-                    className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-navy focus:ring-1 focus:ring-navy transition-all"
-                  />
-                  <input
-                    type="number"
-                    placeholder="Maksimal"
-                    value={maxPrice}
-                    onChange={(e) => setMaxPrice(e.target.value)}
-                    className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-navy focus:ring-1 focus:ring-navy transition-all"
-                  />
-                </div>
-              </div>
+              )}
             </div>
-          </div>
+          )}
 
-          {/* Product Grid Area */}
-          <div className="lg:col-span-9">
-            {filteredProducts.length === 0 ? (
-              <div className="bg-white border border-slate-200 rounded-2xl p-16 text-center space-y-4 shadow-sm">
-                <SearchX className="w-16 h-16 text-slate-300 mx-auto" />
-                <h4 className="text-xl font-bold text-navy">Layanan Tidak Ditemukan</h4>
-                <p className="text-slate-500 max-w-md mx-auto">Kami tidak menemukan layanan yang sesuai dengan pencarian atau filter Anda. Silakan coba kata kunci lain.</p>
-                <button
-                  onClick={() => {
-                    setSelectedCategory(null);
-                    setSearchQuery('');
-                    setMinPrice('');
-                    setMaxPrice('');
-                  }}
-                  className="bg-navy hover:bg-navy/90 text-white font-bold px-6 py-3 rounded-xl transition-colors inline-block mt-4"
-                >
-                  Reset Semua Filter
-                </button>
+          {/* 4. MERCHANT SECTION */}
+          {(activeSearchTypeTab === 'semua' || activeSearchTypeTab === 'merchant') && (
+            <div className="space-y-4 pt-4">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+                <h3 className="font-extrabold text-navy text-lg flex items-center gap-2">
+                  <Store className="w-5 h-5 text-gold" />
+                  Merchant Directory ({filteredMerchants.length})
+                </h3>
               </div>
-            ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-                {filteredProducts.map((p) => (
-                  <ProductCard
-                    key={p.id}
-                    product={p}
-                    onOpenDetail={(product) => setSelectedProductDetail(product)}
-                  />
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {filteredMerchants.map((m) => (
+                  <div
+                    key={m.id}
+                    onClick={() => {
+                      setSelectedMerchantId(m.id);
+                      navigate('merchant-detail');
+                    }}
+                    className="bg-white border border-slate-200 hover:border-gold/40 shadow-sm hover:shadow-md rounded-2xl p-4 flex items-center gap-4 cursor-pointer transition-all hover:-translate-y-0.5"
+                  >
+                    <img src={m.logo} alt={m.name} className="w-12 h-12 rounded-xl object-cover border border-slate-200 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1 font-bold text-navy text-sm">
+                        <span className="truncate">{m.name}</span>
+                        {m.verificationStatus === 'VERIFIED' && <ShieldCheck className="w-4 h-4 text-gold shrink-0" />}
+                      </div>
+                      <p className="text-slate-500 text-xs truncate mt-0.5">{m.description}</p>
+                    </div>
+                  </div>
                 ))}
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
-
-      {/* Mobile Filter Bottom Sheet */}
-      {showMobileFilter && (
-        <div className="fixed inset-0 z-50 flex flex-col justify-end lg:hidden">
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowMobileFilter(false)} />
-          <div className="relative bg-white rounded-t-3xl p-6 w-full max-h-[80vh] overflow-y-auto">
-            <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6"></div>
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="font-bold text-xl text-navy">Filter Pencarian</h3>
-              <button onClick={() => setShowMobileFilter(false)} className="p-2 rounded-xl bg-slate-100 text-slate-600">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            {/* Reused Filter Content for Mobile */}
-            <div className="space-y-6">
-              <div className="space-y-3">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Kategori</label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={() => setSelectedCategory(null)}
-                    className={`px-3 py-2.5 rounded-xl border text-sm font-medium text-center ${!selectedCategory ? 'border-navy bg-navy/5 text-navy font-bold' : 'border-slate-200 text-slate-600'}`}
-                  >
-                    Semua
-                  </button>
-                  {categories.map((cat) => (
-                    <button
-                      key={cat.id}
-                      onClick={() => setSelectedCategory(cat.slug)}
-                      className={`px-3 py-2.5 rounded-xl border text-sm font-medium text-center truncate ${selectedCategory === cat.slug ? 'border-navy bg-navy/5 text-navy font-bold' : 'border-slate-200 text-slate-600'}`}
-                    >
-                      {cat.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="space-y-3">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Rentang Harga</label>
-                <div className="grid grid-cols-2 gap-3">
-                  <input type="number" placeholder="Min" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:outline-none focus:border-navy" />
-                  <input type="number" placeholder="Max" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:outline-none focus:border-navy" />
-                </div>
-              </div>
-              <button
-                onClick={() => setShowMobileFilter(false)}
-                className="w-full bg-navy text-white font-bold py-3.5 rounded-xl"
-              >
-                Terapkan Filter
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Product Detail Modal */}
-      {selectedProductDetail && (
-        <ProductDetailModal
-          product={selectedProductDetail}
-          onClose={() => setSelectedProductDetail(null)}
-        />
-      )}
     </div>
   );
 };

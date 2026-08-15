@@ -3,7 +3,7 @@ import { useApp } from '../../context/AppContext';
 import { Megaphone, Sparkles, Filter, Search, PlusCircle, ExternalLink, Eye, MousePointer, ShieldCheck, Zap, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 
 export const AdsView: React.FC = () => {
-  const { ads, categories, searchQuery, setSearchQuery, navigate, activeRole, approveAd, rejectAd } = useApp();
+  const { ads, categories, searchQuery, setSearchQuery, navigate, activeRole, approveAd, rejectAd, setIsCreateAdModalOpen } = useApp();
   const [filterType, setFilterType] = useState<'ALL' | 'FREE' | 'PREMIUM'>('ALL');
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
 

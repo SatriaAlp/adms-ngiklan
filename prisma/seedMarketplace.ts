@@ -35,6 +35,34 @@ async function main() {
     },
   });
 
+  // 2b. Create Merchant Demo User
+  const merchantUser = await prisma.user.upsert({
+    where: { email: 'merchant@adms.id' },
+    update: {},
+    create: {
+      name: 'Merchant Demo',
+      email: 'merchant@adms.id',
+      phone: '081299998888',
+      passwordHash,
+      role: 'MERCHANT',
+    },
+  });
+
+  // 2c. Create Merchant Demo Store
+  await prisma.merchant.upsert({
+    where: { slug: 'merchant-demo' },
+    update: {},
+    create: {
+      ownerId: merchantUser.id,
+      name: 'Merchant Demo Store',
+      slug: 'merchant-demo',
+      description: 'Toko demo merchant untuk pengujian fitur marketplace ADMS',
+      verificationStatus: 'VERIFIED',
+      location: 'Bandung, Indonesia',
+      contactWhatsapp: '081299998888',
+    },
+  });
+
   // 3. Categories
   const categoriesData = [
     { name: 'Digital Ads', slug: 'digital-ads', iconName: 'Megaphone' },
@@ -115,7 +143,7 @@ async function main() {
         price: item.price,
         priceType: item.priceType as any,
         shortDescription: item.desc,
-        fullDescription: item.desc + '\\n\\n' + 'ADMS menyediakan layanan profesional yang dikerjakan oleh tim ahli. Proses cepat, hasil transparan dan berorientasi pada kepuasan pelanggan.',
+        fullDescription: item.desc + '\n\n' + 'ADMS menyediakan layanan profesional yang dikerjakan oleh tim ahli. Proses cepat, hasil transparan dan berorientasi pada kepuasan pelanggan.',
         status: 'ACTIVE',
         thumbnail: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&auto=format&fit=crop&q=80', // Dummy placeholder
       },

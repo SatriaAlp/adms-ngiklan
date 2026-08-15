@@ -111,7 +111,7 @@ export const PostFreeAdView: React.FC = () => {
             setImages((prev) => [...prev, event.target!.result as string]);
           }
         };
-        reader.readAsDataURL(file);
+        reader.readAsDataURL(file as Blob);
       });
       addNotification('Foto berhasil diunggah dari perangkat Anda!', 'success');
     }

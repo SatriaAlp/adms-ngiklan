@@ -13,19 +13,21 @@ import {
   ChevronRight,
 } from 'lucide-react';
 
-interface ProductDetailModalProps {
-  product: Product | null;
-  onClose: () => void;
-}
-
-export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClose }) => {
-  const { addToCart, wishlist, toggleWishlist, navigate, setSelectedMerchantId, addNotification } = useApp();
+export const ProductDetailModal: React.FC = () => {
+  const { addToCart, wishlist, toggleWishlist, navigate, setSelectedMerchantId, addNotification, selectedProduct: product, setSelectedProduct } = useApp();
   const [activeTab, setActiveTab] = useState<'desc' | 'specs' | 'reviews'>('desc');
-  const [selectedPackageId, setSelectedPackageId] = useState<string | null>(
-    product?.packages && product.packages.length > 0 ? product.packages[1]?.id || product.packages[0]?.id : null
-  );
+  const [selectedPackageId, setSelectedPackageId] = useState<string | null>(null);
+
+  // Sync selected package ID when product changes
+  React.useEffect(() => {
+    if (product?.packages && product.packages.length > 0) {
+      setSelectedPackageId(product.packages[1]?.id || product.packages[0]?.id);
+    }
+  }, [product]);
 
   if (!product) return null;
+
+  const onClose = () => setSelectedProduct(null);
 
   const isWishlisted = wishlist.includes(product.id);
 

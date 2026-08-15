@@ -5,7 +5,7 @@ import { Store, ShieldCheck, Star, Package, Search, ExternalLink, ArrowRight, Ch
 export const MerchantsView: React.FC = () => {
   const { 
     merchants, products, navigate, activeRole, setActiveRole, 
-    addNotification, setDashboardSubTab 
+    addNotification, setDashboardSubTab, currentUser, setIsLoggedIn 
   } = useApp();
   const [search, setSearch] = useState('');
 
@@ -32,15 +32,31 @@ export const MerchantsView: React.FC = () => {
         </div>
 
         {activeRole === 'USER' && (
-          <button
-            onClick={() => {
-              navigate('daftar-merchant');
-            }}
-            className="bg-gold hover:bg-gold/90 text-navy font-bold text-xs sm:text-sm px-6 py-3 rounded-xl shadow-xs flex items-center gap-2 shrink-0 transition-all"
-          >
-            <Store className="w-4 h-4" />
-            <span>Daftar Jadi Merchant</span>
-          </button>
+          currentUser.merchantId ? (
+            <button
+              onClick={() => {
+                setIsLoggedIn(true);
+                setActiveRole('MERCHANT');
+                navigate('dashboard');
+                setDashboardSubTab('overview');
+                addNotification('Beralih ke Dashboard Merchant', 'success');
+              }}
+              className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs sm:text-sm px-6 py-3 rounded-xl shadow-xs flex items-center gap-2 shrink-0 transition-all active:scale-[0.98]"
+            >
+              <Store className="w-4 h-4 text-emerald-200" />
+              <span>Masuk Dashboard Merchant</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => {
+                navigate('daftar-merchant');
+              }}
+              className="bg-gold hover:bg-gold/90 text-navy font-bold text-xs sm:text-sm px-6 py-3 rounded-xl shadow-xs flex items-center gap-2 shrink-0 transition-all active:scale-[0.98]"
+            >
+              <Store className="w-4 h-4" />
+              <span>Daftar Jadi Merchant</span>
+            </button>
+          )
         )}
         {activeRole === 'MERCHANT' && (
           <button

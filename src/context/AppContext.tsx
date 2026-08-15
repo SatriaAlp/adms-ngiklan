@@ -45,6 +45,10 @@ interface AppContextType {
   activeTab: string;
   navigate: (tab: string, params?: NavigationParams, forceAccess?: boolean) => void;
   selectedProductId: string | null;
+  selectedProduct: Product | null;
+  setSelectedProduct: (product: Product | null) => void;
+  paymentPopupProduct: Product | null;
+  setPaymentPopupProduct: (product: Product | null) => void;
   selectedMerchantId: string | null;
   selectedAdId: string | null;
   selectedCategory: string | null;
@@ -122,9 +126,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [activeRole, setActiveRoleState] = useState<UserRole>(() => {
     return (localStorage.getItem('adms_active_role') as UserRole) || 'USER';
   });
+
   const [currentUser, setCurrentUser] = useState<User>(() => {
     const saved = localStorage.getItem('adms_current_user');
-    return saved ? JSON.parse(saved) : {
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    return {
       id: 'usr-1001',
       name: 'Afifah Rizki',
       email: 'afifahrizki25@gmail.com',
@@ -139,13 +151,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const setActiveRole = (role: UserRole, name?: string) => {
     setActiveRoleState(role);
     localStorage.setItem('adms_active_role', role);
-    const updatedUser = {
-      ...currentUser,
-      role,
-      name: name || (role === 'ADMIN' ? 'Administrator' : role === 'MERCHANT' ? 'Merchant Partner' : 'Customer Umum'),
-    };
-    setCurrentUser(updatedUser);
-    localStorage.setItem('adms_current_user', JSON.stringify(updatedUser));
+    setCurrentUser((prev) => {
+      const updated = {
+        ...prev,
+        role,
+        name: name || (role === 'ADMIN' ? 'Administrator' : role === 'MERCHANT' ? 'Merchant Partner' : 'Customer Umum'),
+      };
+      localStorage.setItem('adms_current_user', JSON.stringify(updated));
+      return updated;
+    });
   };
 
   const location = useLocation();
@@ -214,6 +228,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [paymentPopupProduct, setPaymentPopupProduct] = useState<Product | null>(null);
   const [selectedMerchantId, setSelectedMerchantId] = useState<string | null>(null);
   const [selectedAdId, setSelectedAdId] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -318,6 +334,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
   const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
   const [loginModalDefaultTab, setLoginModalDefaultTab] = useState<'login' | 'register'>('login');
+
+  React.useEffect(() => {
+    localStorage.setItem('adms_is_logged_in', String(isLoggedIn));
+    if (!isLoggedIn) {
+      localStorage.removeItem('adms_active_role');
+      localStorage.removeItem('adms_current_user');
+      setActiveRoleState('USER');
+    }
+  }, [isLoggedIn]);
   const [cartDrawerTab, setCartDrawerTab] = useState<'cart' | 'wishlist'>('cart');
   const [pendingPostAd, setPendingPostAd] = useState<boolean>(false);
   const [pendingAdPublishPayload, setPendingAdPublishPayload] = useState<any | null>(null);
@@ -344,11 +369,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setIsLoginModalOpen(true);
       return;
     }
-    if (tab === 'buat-iklan-gratis' && !isLoggedIn && !forceAccess) {
-      addNotification('Silakan login terlebih dahulu untuk memasang iklan gratis.', 'warning');
-      setPendingPostAd(true);
-      setIsLoginModalOpen(true);
-      return;
+    if (tab === 'pasang-iklan-gratis' && !forceAccess) {
+      if (!isLoggedIn) {
+        addNotification('Silakan login terlebih dahulu untuk memasang iklan gratis.', 'warning');
+        setPendingPostAd(true);
+        setIsLoginModalOpen(true);
+        return;
+      }
+      if (activeRole === 'USER') {
+        addNotification('Hanya akun Merchant yang dapat memasang iklan. Silakan mendaftar jadi Merchant terlebih dahulu.', 'warning');
+        return;
+      }
     }
 
     if (params) {
@@ -661,6 +692,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         dashboardSubTab,
         setDashboardSubTab,
         selectedProductId,
+        selectedProduct,
+        setSelectedProduct,
+        paymentPopupProduct,
+        setPaymentPopupProduct,
         selectedMerchantId,
         selectedAdId,
         selectedCategory,

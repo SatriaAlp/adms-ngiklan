@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Store, Mail, Phone, User, Lock, UploadCloud, MapPin, CheckCircle2, ChevronRight, Check } from 'lucide-react';
+import { Store, Mail, Phone, User, Lock, UploadCloud, MapPin, CheckCircle2, ChevronRight, Check, Eye, EyeOff } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { api } from '../../services/apiClient';
 
@@ -8,6 +8,8 @@ export const MerchantRegistrationView: React.FC = () => {
   
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -406,12 +408,19 @@ export const MerchantRegistrationView: React.FC = () => {
                 <div className="relative">
                   <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     value={formData.password}
                     onChange={(e) => setFormData({...formData, password: e.target.value})}
-                    className={`w-full pl-10 pr-4 py-2.5 rounded-xl border ${errors.password ? 'border-rose-300 bg-rose-50' : 'border-slate-200 bg-slate-50'} text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all`}
+                    className={`w-full pl-10 pr-10 py-2.5 rounded-xl border ${errors.password ? 'border-rose-300 bg-rose-50' : 'border-slate-200 bg-slate-50'} text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all`}
                     placeholder="Minimal 8 karakter"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
                 </div>
                 {errors.password && <p className="text-rose-500 text-xs mt-1">{errors.password}</p>}
               </div>
@@ -420,12 +429,19 @@ export const MerchantRegistrationView: React.FC = () => {
                 <div className="relative">
                   <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
-                    type="password"
+                    type={showConfirmPassword ? "text" : "password"}
                     value={formData.confirmPassword}
                     onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
-                    className={`w-full pl-10 pr-4 py-2.5 rounded-xl border ${errors.confirmPassword ? 'border-rose-300 bg-rose-50' : 'border-slate-200 bg-slate-50'} text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all`}
+                    className={`w-full pl-10 pr-10 py-2.5 rounded-xl border ${errors.confirmPassword ? 'border-rose-300 bg-rose-50' : 'border-slate-200 bg-slate-50'} text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all`}
                     placeholder="Ketik ulang password"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                  >
+                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
                 </div>
                 {errors.confirmPassword && <p className="text-rose-500 text-xs mt-1">{errors.confirmPassword}</p>}
               </div>

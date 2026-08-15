@@ -8,6 +8,10 @@
   --color-gold: #FFC727;
   --color-gold-dark: #D4AF37;
 
+  /* Custom Border Color Overrides to make lines clearer (not too washed out) */
+  --color-slate-200: #cbd5e1;
+  --color-slate-300: #94a3b8;
+
   /* Custom WhatsApp Green Theme Colors */
   --color-emerald-500: #00c853;
   --color-emerald-600: #059669;

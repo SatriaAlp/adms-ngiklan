@@ -21,8 +21,8 @@ export const PricingView: React.FC = () => {
         </p>
       </div>
 
-      {/* Ad Packages Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Ad Packages Grid (Balanced 3-2 Layout for 5 Packages) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* Free Plan */}
         <div className="bg-white rounded-2xl border border-slate-200 p-6 flex flex-col justify-between hover:shadow-md transition-all">
           <div className="space-y-4">
@@ -32,7 +32,7 @@ export const PricingView: React.FC = () => {
             </div>
             <div>
               <h3 className="font-black text-xl text-slate-900">Iklan Gratis</h3>
-              <p className="text-3xl font-black text-slate-900 mt-2">Rp0 <span className="text-xs text-slate-500 font-normal">/ 30 hari</span></p>
+              <p className="text-2xl sm:text-3xl font-black text-slate-900 mt-2">Rp0 <span className="text-xs text-slate-500 font-normal">/ 30 hari</span></p>
             </div>
             <p className="text-xs text-slate-600 leading-relaxed font-normal">
               Pasang promosi produk atau jasa Anda secara gratis di katalog publik ADMS.
@@ -92,7 +92,7 @@ export const PricingView: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="font-black text-xl text-slate-900">{pkg.name}</h3>
-                  <p className="text-2xl font-black text-slate-900 mt-2">
+                  <p className="text-2xl sm:text-3xl font-black text-slate-900 mt-2">
                     Rp{pkg.price.toLocaleString('id-ID')} <span className="text-xs text-slate-500 font-normal">/ {pkg.durationDays} hari</span>
                   </p>
                 </div>
@@ -144,7 +144,7 @@ export const PricingView: React.FC = () => {
           </p>
         </div>
         <button
-          onClick={() => navigate('dashboard')}
+          onClick={() => navigate('daftar-merchant')}
           className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs sm:text-sm px-6 py-3 rounded-xl shadow-xs shrink-0 flex items-center gap-2 transition-all"
         >
           <span>Daftar Merchant Sekarang</span>

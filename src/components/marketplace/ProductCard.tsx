@@ -5,11 +5,10 @@ import { Star, Heart, ShoppingBag, Store, ArrowUpRight } from 'lucide-react';
 
 interface ProductCardProps {
   product: Product;
-  onOpenDetail?: (product: Product) => void;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetail }) => {
-  const { addToCart, wishlist, toggleWishlist, navigate, setSelectedMerchantId } = useApp();
+export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+  const { addToCart, wishlist, toggleWishlist, navigate, setSelectedMerchantId, setSelectedProduct, setPaymentPopupProduct } = useApp();
   const isWishlisted = wishlist.includes(product.id);
 
   const formatRupiah = (amount: number) => {
@@ -18,8 +17,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetail 
 
   const handleBuyNow = (e: React.MouseEvent) => {
     e.stopPropagation();
-    addToCart(product);
-    navigate('cart');
+    if (product.priceType === 'CONTACT_US') {
+      // Free consultation via WhatsApp
+      const message = `Halo admin ADMS, saya tertarik dengan layanan *${product.title}*. Mohon info lebih lanjut.`;
+      window.open(`https://wa.me/6281234567890?text=${encodeURIComponent(message)}`, '_blank');
+    } else {
+      // Payment popup
+      setPaymentPopupProduct(product);
+    }
   };
 
   const handleAddToCart = (e: React.MouseEvent) => {
@@ -35,7 +40,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetail 
 
   return (
     <div
-      onClick={() => onOpenDetail && onOpenDetail(product)}
+      onClick={() => setSelectedProduct(product)}
       className="group bg-white hover:bg-white border border-slate-200 hover:border-slate-300 rounded-xl overflow-hidden shadow-xs hover:shadow-md transition-all duration-200 flex flex-col cursor-pointer"
     >
       {/* Thumbnail Container */}
@@ -63,6 +68,18 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetail 
         >
           <Heart className={`w-3.5 h-3.5 ${isWishlisted ? 'fill-current' : ''}`} />
         </button>
+
+        {/* Add to Cart Overlay Button (Only if it has a price) */}
+        {product.priceType !== 'CONTACT_US' && (
+          <button
+            type="button"
+            onClick={handleAddToCart}
+            className="absolute top-12 right-2.5 p-2 rounded-lg bg-white/90 text-slate-600 hover:text-navy hover:bg-white transition-all shadow-xs opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0"
+            title="Tambah ke Keranjang"
+          >
+            <ShoppingBag className="w-3.5 h-3.5" />
+          </button>
+        )}
 
         {/* Badges */}
         <div className="absolute top-2.5 left-2.5 flex flex-wrap gap-1 pointer-events-none">
@@ -157,7 +174,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetail 
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                if (onOpenDetail) onOpenDetail(product);
+                setSelectedProduct(product);
               }}
               className="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs py-2 px-2 rounded-lg flex items-center justify-center transition-colors"
             >
@@ -166,9 +183,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetail 
             <button
               type="button"
               onClick={handleBuyNow}
-              className="w-full bg-navy hover:bg-navy/90 text-white font-bold text-xs py-2 px-2 rounded-lg flex items-center justify-center transition-colors shadow-xs"
+              className={`w-full font-bold text-xs py-2 px-2 rounded-lg flex items-center justify-center transition-colors shadow-xs ${
+                product.priceType === 'CONTACT_US'
+                  ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
+                  : 'bg-navy hover:bg-navy/90 text-white'
+              }`}
             >
-              Pesan Sekarang
+              {product.priceType === 'CONTACT_US' ? 'Konsultasi Gratis' : 'Pesan Sekarang'}
             </button>
           </div>
         </div>
