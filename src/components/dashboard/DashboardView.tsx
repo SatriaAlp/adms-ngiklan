@@ -533,18 +533,52 @@ export const DashboardView: React.FC = () => {
                     </div>
                   )}
 
-                  {/* Pending Verification Banner */}
-                  {merchants.some(m => m.ownerId === currentUser.id && !m.isVerified) && (
-                    <div className="bg-amber-50 border border-amber-200 text-amber-800 p-5 rounded-2xl shadow-sm flex items-center gap-3">
-                      <div className="p-2 bg-amber-100 rounded-full text-amber-600">
-                        <Store className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-sm">Toko Anda Sedang Ditinjau</h4>
-                        <p className="text-xs mt-0.5 opacity-90">Pendaftaran merchant Anda sedang dalam proses peninjauan oleh admin. Mohon ditunggu.</p>
-                      </div>
-                    </div>
-                  )}
+                  {/* Pending/Rejected Verification Banners */}
+                  {merchants.filter(m => m.ownerId === currentUser.id).map(m => {
+                    if (m.verificationStatus === 'PENDING' || (!m.isVerified && m.verificationStatus !== 'REJECTED')) {
+                      return (
+                        <div key={m.id} className="bg-amber-50 border border-amber-200 text-amber-800 p-5 rounded-2xl shadow-sm flex items-center gap-3">
+                          <div className="p-2 bg-amber-100 rounded-full text-amber-600">
+                            <Store className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-sm">Toko Anda Sedang Ditinjau</h4>
+                            <p className="text-xs mt-0.5 opacity-90">Pendaftaran merchant "{m.name}" sedang dalam proses peninjauan oleh admin. Mohon ditunggu.</p>
+                          </div>
+                        </div>
+                      );
+                    }
+                    if (m.verificationStatus === 'REJECTED') {
+                      return (
+                        <div key={m.id} className="bg-rose-50 border border-rose-200 text-rose-800 p-5 rounded-2xl shadow-sm flex flex-col gap-3">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-rose-100 rounded-full text-rose-600">
+                              <Store className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-sm">Pendaftaran Toko Ditolak</h4>
+                              <p className="text-xs mt-0.5 opacity-90">Pengajuan toko "{m.name}" Anda ditolak oleh admin.</p>
+                            </div>
+                          </div>
+                          {m.verificationNotes && (
+                            <div className="bg-white/80 p-3 rounded-xl border border-rose-100 text-xs mt-1">
+                              <span className="font-black block text-rose-950 mb-1">Alasan Penolakan:</span>
+                              <p className="text-rose-900 leading-relaxed font-semibold">{m.verificationNotes}</p>
+                            </div>
+                          )}
+                          <div className="mt-1 flex justify-end">
+                            <button
+                              onClick={() => navigate('daftar-merchant')}
+                              className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all"
+                            >
+                              Ajukan Ulang Pendaftaran
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })}
 
                   <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-4 shadow-xs">
                     <h3 className="font-bold text-lg text-slate-900">Riwayat Pembelian & Download File</h3>

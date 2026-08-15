@@ -26,7 +26,10 @@ export const LoginModal: React.FC = () => {
   const [registerUsername, setRegisterUsername] = useState('');
   const [registerEmail, setRegisterEmail] = useState('');
   const [registerPassword, setRegisterPassword] = useState('');
-  const [tab, setTab] = useState<'login' | 'register'>('login');
+  const [tab, setTab] = useState<'login' | 'register' | 'forgot' | 'reset'>('login');
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [otp, setOtp] = useState('');
+  const [newPassword, setNewPassword] = useState('');
   
   // Store newly registered accounts in memory during this session
   const [registeredAccounts, setRegisteredAccounts] = useState<{username: string, email: string, password: string}[]>(() => {
@@ -46,6 +49,9 @@ export const LoginModal: React.FC = () => {
       setRegisterUsername('');
       setRegisterEmail('');
       setRegisterPassword('');
+      setForgotEmail('');
+      setOtp('');
+      setNewPassword('');
     } else {
       setTab(loginModalDefaultTab || 'login');
       setShowPassword(false);
@@ -55,13 +61,16 @@ export const LoginModal: React.FC = () => {
 
   if (!isLoginModalOpen) return null;
 
-  const handleTabChange = (newTab: 'login' | 'register') => {
+  const handleTabChange = (newTab: 'login' | 'register' | 'forgot' | 'reset') => {
     setTab(newTab);
     setEmail('');
     setPassword('');
     setRegisterUsername('');
     setRegisterEmail('');
     setRegisterPassword('');
+    setForgotEmail('');
+    setOtp('');
+    setNewPassword('');
     setShowPassword(false);
     setShowRegisterPassword(false);
   };
@@ -201,6 +210,40 @@ export const LoginModal: React.FC = () => {
     addNotification('Pendaftaran berhasil! Silakan klik Masuk Akun untuk login.', 'success');
   };
 
+  const handleForgotPasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const response = await api.forgotPassword({ email: forgotEmail });
+      if (response && response.success) {
+        addNotification('Kode OTP pemulihan password berhasil dikirim (Cek log console backend)!', 'success');
+        setTab('reset');
+      }
+    } catch (err: any) {
+      addNotification(err.message || 'Gagal mengirim OTP pemulihan password!', 'error');
+    }
+  };
+
+  const handleResetPasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const response = await api.resetPassword({
+        email: forgotEmail,
+        otp,
+        password: newPassword
+      });
+      if (response && response.success) {
+        addNotification('Password baru Anda berhasil disimpan! Silakan login kembali.', 'success');
+        setTab('login');
+        setEmail(forgotEmail);
+        setPassword(newPassword);
+        setOtp('');
+        setNewPassword('');
+      }
+    } catch (err: any) {
+      addNotification(err.message || 'Gagal mengatur ulang password!', 'error');
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
       <div
@@ -226,25 +269,27 @@ export const LoginModal: React.FC = () => {
 
         {/* Body */}
         <div className="p-6 space-y-6">
-          {/* Tab Selector */}
-          <div className="flex bg-slate-100 p-1 rounded-xl">
-            <button
-              onClick={() => handleTabChange('login')}
-              className={`flex-1 py-2 text-xs font-bold rounded-lg transition-colors ${tab === 'login' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-900'
-                }`}
-            >
-              Masuk Akun
-            </button>
-            <button
-              onClick={() => handleTabChange('register')}
-              className={`flex-1 py-2 text-xs font-bold rounded-lg transition-colors ${tab === 'register' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-900'
-                }`}
-            >
-              Daftar Baru
-            </button>
-          </div>
+          {/* Tab Selector - Only visible on Login/Register */}
+          {(tab === 'login' || tab === 'register') && (
+            <div className="flex bg-slate-100 p-1 rounded-xl">
+              <button
+                onClick={() => handleTabChange('login')}
+                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-colors ${tab === 'login' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-900'
+                  }`}
+              >
+                Masuk Akun
+              </button>
+              <button
+                onClick={() => handleTabChange('register')}
+                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-colors ${tab === 'register' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-900'
+                  }`}
+              >
+                Daftar Baru
+              </button>
+            </div>
+          )}
 
-          {tab === 'login' ? (
+          {tab === 'login' && (
             <form onSubmit={handleLoginSubmit} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">Username</label>
@@ -285,6 +330,16 @@ export const LoginModal: React.FC = () => {
                 </div>
               </div>
 
+              <div className="flex items-center justify-end">
+                <button
+                  type="button"
+                  onClick={() => setTab('forgot')}
+                  className="text-[10px] font-bold text-slate-500 hover:text-slate-900 focus:outline-none"
+                >
+                  Lupa Password?
+                </button>
+              </div>
+
               <button
                 type="submit"
                 className="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-xs transition-colors"
@@ -292,7 +347,9 @@ export const LoginModal: React.FC = () => {
                 Masuk Akun
               </button>
             </form>
-          ) : (
+          )}
+
+          {tab === 'register' && (
             <form onSubmit={handleRegisterSubmit} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">Username</label>
@@ -345,6 +402,84 @@ export const LoginModal: React.FC = () => {
               >
                 Daftar & Buat Akun
               </button>
+            </form>
+          )}
+
+          {tab === 'forgot' && (
+            <form onSubmit={handleForgotPasswordSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Email Pemulihan</label>
+                <input
+                  type="email"
+                  required
+                  placeholder="masukkan email terdaftar"
+                  value={forgotEmail}
+                  onChange={(e) => setForgotEmail(e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-medium focus:ring-2 focus:ring-slate-900 focus:outline-none"
+                />
+              </div>
+              <button
+                type="submit"
+                className="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-xs transition-colors"
+              >
+                Kirim Kode OTP
+              </button>
+              <div className="text-center pt-2">
+                <button
+                  type="button"
+                  onClick={() => setTab('login')}
+                  className="text-xs font-bold text-slate-500 hover:text-slate-900"
+                >
+                  Kembali ke Login
+                </button>
+              </div>
+            </form>
+          )}
+
+          {tab === 'reset' && (
+            <form onSubmit={handleResetPasswordSubmit} className="space-y-4">
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-center">
+                <p className="text-[10px] text-slate-500">Kami telah mengirimkan 6 digit kode OTP ke email Anda.</p>
+                <p className="text-xs font-bold text-navy mt-0.5">{forgotEmail}</p>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Kode OTP</label>
+                <input
+                  type="text"
+                  required
+                  maxLength={6}
+                  placeholder="123456"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-center tracking-widest focus:ring-2 focus:ring-slate-900 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Password Baru</label>
+                <input
+                  type="password"
+                  required
+                  placeholder="••••••••"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs font-medium focus:ring-2 focus:ring-slate-900 focus:outline-none"
+                />
+              </div>
+              <button
+                type="submit"
+                className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-xs transition-colors"
+              >
+                Simpan Password Baru
+              </button>
+              <div className="text-center pt-2">
+                <button
+                  type="button"
+                  onClick={() => setTab('forgot')}
+                  className="text-xs font-bold text-slate-500 hover:text-slate-900"
+                >
+                  Kirim Ulang OTP
+                </button>
+              </div>
             </form>
           )}
         </div>

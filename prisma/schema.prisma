@@ -1,66 +1,42 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-generator client {
-  provider = "prisma-client-js"
-}
-
 datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id            String    @id @default(uuid())
-  name          String
-  email         String    @unique
-  phone         String?
-  passwordHash  String
-  avatar        String?
-  role          Role      @default(USER)
-  status        Status    @default(ACTIVE)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  lastLogin     DateTime?
-
-  merchants     Merchant[]
-  orders        Order[]
-  reviews       Review[]
-  advertisements Advertisement[]
+generator client {
+  provider = "prisma-client-js"
 }
+
+// ==========================================
+// ENUMS
+// ==========================================
 
 enum Role {
   USER
   MERCHANT
   ADMIN
   SUPER_ADMIN
-  MODERATOR
 }
 
-enum Status {
+enum UserStatus {
   ACTIVE
   SUSPENDED
-  BANNED
-  PENDING
 }
 
-model Merchant {
-  id              String    @id @default(uuid())
-  ownerId         String
-  name            String
-  slug            String    @unique
-  logo            String?
-  banner          String?
-  description     String?   @db.Text
-  verificationStatus VerificationStatus @default(PENDING)
-  location        String?
-  contactWhatsapp String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+enum ProductPriceType {
+  FIXED
+  STARTING_FROM
+  CONTACT_US
+}
 
-  owner           User      @relation(fields: [ownerId], references: [id])
-  products        Product[]
-  advertisements Advertisement[]
+enum ProductStatus {
+  ACTIVE
+  PENDING
+  REJECTED
+  APPROVED
 }
 
 enum VerificationStatus {
@@ -70,170 +46,372 @@ enum VerificationStatus {
   SUSPENDED
 }
 
-model Product {
-  id              String    @id @default(uuid())
-  merchantId      String
-  title           String
-  slug            String    @unique
-  categoryId      String
-  price           Decimal   @db.Decimal(10, 2)
-  discountPrice   Decimal?  @db.Decimal(10, 2)
-  thumbnail       String?
-  shortDescription String   @db.Text
-  fullDescription String    @db.Text
-  status          ProductStatus @default(DRAFT)
-  priceType       PriceType @default(FIXED)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
-  merchant        Merchant  @relation(fields: [merchantId], references: [id])
-  category        Category  @relation(fields: [categoryId], references: [id])
-  orderItems      OrderItem[]
-  reviews         Review[]
-  packages        ProductPackage[]
+enum AdCondition {
+  BARU
+  BEKAS
 }
 
-enum PriceType {
-  FIXED
-  STARTING_FROM
-  CONTACT_US
-}
-
-model ProductPackage {
-  id              String    @id @default(uuid())
-  productId       String
-  name            String
-  price           Decimal   @db.Decimal(10, 2)
-  description     String?   @db.Text
-  features        String?   @db.Text // Store as JSON array string or comma separated
-  deliveryTime    String?
-  
-  product         Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
-  orderItems      OrderItem[]
-}
-
-enum ProductStatus {
-  DRAFT
-  PENDING_REVIEW
+enum AdStatus {
+  PENDING
   APPROVED
-  ACTIVE
-  INACTIVE
   REJECTED
-  SUSPENDED
+  EXPIRED
 }
 
-model Category {
-  id              String    @id @default(uuid())
-  name            String
-  slug            String    @unique
-  iconName        String?
-  description     String?
-  products        Product[]
+enum CategoryType {
+  PRODUCT
+  ADVERTISEMENT
 }
 
-model Order {
-  id              String    @id @default(uuid())
-  customerId      String
-  subtotal        Decimal   @db.Decimal(10, 2)
-  discount        Decimal   @db.Decimal(10, 2) @default(0)
-  platformFee     Decimal   @db.Decimal(10, 2)
-  totalAmount     Decimal   @db.Decimal(10, 2)
-  paymentMethod   String
-  paymentStatus   PaymentStatus @default(PENDING)
-  transactionType String
-  createdAt       DateTime  @default(now())
-  paidAt          DateTime?
+enum PackageType {
+  FREE
+  PREMIUM
+}
 
-  customer        User      @relation(fields: [customerId], references: [id])
-  items           OrderItem[]
+enum OrderStatus {
+  PENDING
+  PAID
+  PROCESSED
+  SHIPPED
+  COMPLETED
+  CANCELLED
 }
 
 enum PaymentStatus {
-  PENDING
-  PROCESSING
+  UNPAID
   PAID
-  FAILED
-  EXPIRED
   REFUNDED
 }
 
-model OrderItem {
-  id              String    @id @default(uuid())
-  orderId         String
-  productId       String
-  packageId       String?
-  price           Decimal   @db.Decimal(10, 2)
-  quantity        Int
-  downloadUrl     String?
-
-  order           Order     @relation(fields: [orderId], references: [id])
-  product         Product   @relation(fields: [productId], references: [id])
-  package         ProductPackage? @relation(fields: [packageId], references: [id])
+enum MediaType {
+  PRODUCT_IMAGE
+  AD_IMAGE
+  PROFILE_AVATAR
+  MERCHANT_LOGO
 }
 
-model Review {
-  id              String    @id @default(uuid())
-  productId       String
-  userId          String
-  rating          Int
-  comment         String    @db.Text
-  createdAt       DateTime  @default(now())
-
-  product         Product   @relation(fields: [productId], references: [id])
-  user            User      @relation(fields: [userId], references: [id])
+enum NotificationType {
+  ORDER
+  AD_STATUS
+  MERCHANT_STATUS
+  SYSTEM
 }
 
-model SystemSetting {
-  id              String    @id @default(uuid())
-  key             String    @unique
-  value           String    @db.Text
-  updatedAt       DateTime  @updatedAt
+enum TokenType {
+  REFRESH
+  RESET_PASSWORD
+  EMAIL_VERIFICATION
 }
 
+enum TargetType {
+  PRODUCT
+  ADVERTISEMENT
+  MERCHANT
+  USER
+}
+
+// ==========================================
+// MODELS
+// ==========================================
+
+// Model User menyimpan kredensial utama, hak akses, dan status keanggotaan pengguna
+model User {
+  id           String     @id @default(uuid()) @map("id")
+  name         String     @map("name")
+  email        String     @unique @map("email")
+  phone        String?    @map("phone")
+  passwordHash String     @map("password_hash")
+  role         Role       @default(USER) @map("role")
+  status       UserStatus @default(ACTIVE) @map("status")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+  deletedAt    DateTime?  @map("deleted_at")
+
+  merchants      Merchant[]
+  orders         Order[]
+  reviews        Review[]
+  advertisements Advertisement[]
+  wishlists      Wishlist[]
+  notifications  Notification[]
+  authTokens     AuthToken[]
+  auditLogs      AdminAuditLog[]
+
+  @@index([email])
+  @@map("users")
+}
+
+// Model Merchant merepresentasikan informasi toko mitra / pedagang syariah
+model Merchant {
+  id               String    @id @default(uuid()) @map("id")
+  ownerId          String    @map("owner_id")
+  name             String    @map("name")
+  slug             String    @unique @map("slug")
+  description      String?   @db.Text @map("description")
+  isVerified       Boolean   @default(false) @map("is_verified")
+  location         String?   @map("location")
+  contactWhatsapp  String?   @map("contact_whatsapp")
+  syariahCertified Boolean   @default(false) @map("syariah_certified")
+  syariahCertNumber String?  @map("syariah_cert_number")
+  syariahCertBody   String?  @map("syariah_cert_body")
+  verificationStatus VerificationStatus @default(PENDING) @map("verification_status")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+  deletedAt        DateTime? @map("deleted_at")
+  verificationNotes String?   @db.Text @map("verification_notes")
+
+  owner          User            @relation(fields: [ownerId], references: [id])
+  products       Product[]
+  advertisements Advertisement[]
+  orders         Order[]
+  reviews        Review[]
+
+  @@index([ownerId])
+  @@index([slug])
+  @@map("merchants")
+}
+
+// Model Product merepresentasikan produk digital/layanan komersial milik Merchant
+model Product {
+  id               String           @id @default(uuid()) @map("id")
+  merchantId       String           @map("merchant_id")
+  categoryId       String           @map("category_id")
+  title            String           @map("title")
+  slug             String           @unique @map("slug")
+  price            Decimal          @db.Decimal(10, 2) @map("price")
+  priceType        ProductPriceType @default(FIXED) @map("price_type")
+  shortDescription String           @db.Text @map("short_description")
+  fullDescription  String           @db.Text @map("full_description")
+  status           ProductStatus    @default(PENDING) @map("status")
+  thumbnail        String?          @map("thumbnail")
+  stock            Int              @default(0) @map("stock")
+  viewsCount       Int              @default(0) @map("views_count")
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime         @updatedAt @map("updated_at")
+  deletedAt        DateTime?        @map("deleted_at")
+
+  merchant   Merchant    @relation(fields: [merchantId], references: [id])
+  category   Category    @relation(fields: [categoryId], references: [id])
+  orderItems OrderItem[]
+  wishlists  Wishlist[]
+  reviews    Review[]
+
+  @@index([merchantId])
+  @@index([categoryId])
+  @@index([slug])
+  @@map("products")
+}
+
+// Model Advertisement merepresentasikan data iklan baris mandiri (Free / Premium)
 model Advertisement {
-  id           String   @id @default(uuid())
-  title        String
-  category     String
-  subcategory  String?
-  description  String   @db.Text
-  price        Decimal  @db.Decimal(10, 2)
-  images       String   @db.Text
-  location     String
-  contactName  String
-  whatsapp     String
-  websiteUrl   String?
-  condition    String   @default("bekas")
-  tags         String?  @db.Text
-  durationDays Int      @default(7)
-  type         String   @default("free")
-  status       String   @default("pending")
-  merchantId   String?
-  ownerId      String?
-  viewsCount   Int      @default(0)
-  clicksCount  Int      @default(0)
-  createdAt    DateTime @default(now())
-  expiresAt    DateTime
-  packageName  String?
+  id           String      @id @default(uuid()) @map("id")
+  title        String      @map("title")
+  categoryId   String      @map("category_id")
+  subcategory  String?     @map("subcategory")
+  description  String      @db.Text @map("description")
+  price        Decimal     @db.Decimal(10, 2) @map("price")
+  location     String      @map("location")
+  contactName  String      @map("contact_name")
+  whatsapp     String      @map("whatsapp")
+  websiteUrl   String?     @map("website_url")
+  condition    AdCondition @default(BEKAS) @map("condition")
+  tags         String?     @db.Text @map("tags") // Comma-separated or serialized JSON string
+  durationDays Int         @default(7) @map("duration_days")
+  packageId    String      @map("package_id")
+  status       AdStatus    @default(PENDING) @map("status")
+  merchantId   String?     @map("merchant_id")
+  ownerId      String      @map("owner_id")
+  viewsCount   Int         @default(0) @map("views_count")
+  clicksCount  Int         @default(0) @map("clicks_count")
+  createdAt    DateTime    @default(now()) @map("created_at")
+  expiresAt    DateTime    @map("expires_at")
 
-  merchant     Merchant? @relation(fields: [merchantId], references: [id])
-  owner        User?     @relation(fields: [ownerId], references: [id])
+  category  Category  @relation(fields: [categoryId], references: [id])
+  package   Package   @relation(fields: [packageId], references: [id])
+  merchant  Merchant? @relation(fields: [merchantId], references: [id])
+  owner     User      @relation(fields: [ownerId], references: [id])
+  wishlists Wishlist[]
+
+  @@index([categoryId])
+  @@index([packageId])
+  @@index([merchantId])
+  @@index([ownerId])
+  @@map("advertisements")
 }
 
-model AdPackage {
-  id                  String   @id @default(uuid())
-  name                String
-  type                String   @default("free")
-  price               Decimal  @db.Decimal(10, 2)
-  durationDays        Int      @default(7)
-  priority            Int      @default(1)
-  maxImages           Int      @default(2)
-  isFeaturedPlacement Boolean  @default(false)
-  isSearchBoost       Boolean  @default(false)
-  isHomepagePlacement Boolean  @default(false)
-  hasAnalytics        Boolean  @default(false)
-  badge               String?
-  description         String?  @db.Text
-  isActive            Boolean  @default(true)
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+// Model Category menyusun struktur klasifikasi produk dan iklan secara hierarkis (Self-relation)
+model Category {
+  id        String       @id @default(uuid()) @map("id")
+  name      String       @map("name")
+  slug      String       @unique @map("slug")
+  parentId  String?      @map("parent_id")
+  icon      String?      @map("icon")
+  type      CategoryType @map("type")
+  createdAt DateTime     @default(now()) @map("created_at")
+  updatedAt DateTime     @updatedAt @map("updated_at")
+
+  parent         Category?       @relation("CategoryToCategory", fields: [parentId], references: [id])
+  children       Category[]      @relation("CategoryToCategory")
+  products       Product[]
+  advertisements Advertisement[]
+
+  @@index([parentId])
+  @@index([slug])
+  @@map("categories")
+}
+
+// Model Package memuat daftar paket beserta masa aktif dan fitur promosi iklan
+model Package {
+  id           String      @id @default(uuid()) @map("id")
+  name         String      @map("name")
+  price        Decimal     @db.Decimal(10, 2) @map("price")
+  durationDays Int         @map("duration_days")
+  type         PackageType @default(FREE) @map("type")
+  benefits     Json?       @map("benefits") // Benefit fitur disimpan sebagai JSON
+  isActive     Boolean     @default(true) @map("is_active")
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
+
+  advertisements Advertisement[]
+
+  @@map("packages")
+}
+
+// Model Order merepresentasikan faktur transaksi pemesanan produk digital
+model Order {
+  id              String        @id @default(uuid()) @map("id")
+  userId          String        @map("user_id")
+  merchantId      String        @map("merchant_id")
+  totalAmount     Decimal       @db.Decimal(10, 2) @map("total_amount")
+  status          OrderStatus   @default(PENDING) @map("status")
+  paymentMethod   String        @map("payment_method")
+  paymentStatus   PaymentStatus @default(UNPAID) @map("payment_status")
+  shippingAddress String?       @db.Text @map("shipping_address")
+  notes           String?       @db.Text @map("notes")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  user     User        @relation(fields: [userId], references: [id])
+  merchant Merchant    @relation(fields: [merchantId], references: [id])
+  items    OrderItem[]
+
+  @@index([userId])
+  @@index([merchantId])
+  @@map("orders")
+}
+
+// Model OrderItem menyimpan detil rincian item produk di dalam Order
+model OrderItem {
+  id              String  @id @default(uuid()) @map("id")
+  orderId         String  @map("order_id")
+  productId       String  @map("product_id")
+  quantity        Int     @map("quantity")
+  priceAtPurchase Decimal @db.Decimal(10, 2) @map("price_at_purchase")
+  subtotal        Decimal @db.Decimal(10, 2) @map("subtotal")
+
+  order   Order   @relation(fields: [orderId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+  @@index([productId])
+  @@map("order_items")
+}
+
+// Model Wishlist menyimpan tautan produk dan iklan terfavorit milik pengguna
+model Wishlist {
+  id              String   @id @default(uuid()) @map("id")
+  userId          String   @map("user_id")
+  productId       String?  @map("product_id")
+  advertisementId String?  @map("advertisement_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  user          User           @relation(fields: [userId], references: [id])
+  product       Product?       @relation(fields: [productId], references: [id])
+  advertisement Advertisement? @relation(fields: [advertisementId], references: [id])
+
+  @@index([userId])
+  @@index([productId])
+  @@index([advertisementId])
+  @@map("wishlists")
+}
+
+// Model Review menampung rating dan ulasan pelanggan terhadap toko dan produk
+model Review {
+  id         String   @id @default(uuid()) @map("id")
+  userId     String   @map("user_id")
+  merchantId String?  @map("merchant_id")
+  productId  String?  @map("product_id")
+  rating     Int      @map("rating") // Validasi 1-5 diurus aplikasi
+  comment    String?  @db.Text @map("comment")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user     User     @relation(fields: [userId], references: [id])
+  merchant Merchant? @relation(fields: [merchantId], references: [id])
+  product  Product?  @relation(fields: [productId], references: [id])
+
+  @@index([userId])
+  @@index([merchantId])
+  @@index([productId])
+  @@map("reviews")
+}
+
+// Model Media menampung referensi berkas gambar hasil upload secara polimorfis
+model Media {
+  id        String    @id @default(uuid()) @map("id")
+  url       String    @map("url")
+  type      MediaType @map("type")
+  ownerId   String    @map("owner_id") // ID polimorfis (Product.id, Ad.id, User.id, Merchant.id)
+  ownerType String    @map("owner_type") // String type ("PRODUCT", "ADVERTISEMENT", "USER", "MERCHANT")
+  sortOrder Int       @default(0) @map("sort_order")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  @@index([ownerId, ownerType])
+  @@map("media")
+}
+
+// Model Notification menyimpan rekaman riwayat pesan notifikasi pengguna
+model Notification {
+  id        String           @id @default(uuid()) @map("id")
+  userId    String           @map("user_id")
+  title     String           @map("title")
+  message   String           @db.Text @map("message")
+  type      NotificationType @map("type")
+  isRead    Boolean          @default(false) @map("is_read")
+  createdAt DateTime         @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@map("notifications")
+}
+
+// Model AuthToken menyimpan log token autentikasi (refresh, password reset, email verification)
+model AuthToken {
+  id        String    @id @default(uuid()) @map("id")
+  userId    String    @map("user_id")
+  token     String    @unique @map("token")
+  type      TokenType @map("type")
+  expiresAt DateTime  @map("expires_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([token])
+  @@map("auth_tokens")
+}
+
+// Model AdminAuditLog mencatat riwayat jejak audit aksi administratif
+model AdminAuditLog {
+  id         String     @id @default(uuid()) @map("id")
+  adminId    String     @map("admin_id")
+  action     String     @map("action")
+  targetType TargetType @map("target_type")
+  targetId   String     @map("target_id")
+  reason     String?    @db.Text @map("reason")
+  createdAt  DateTime   @default(now()) @map("created_at")
+
+  admin User @relation(fields: [adminId], references: [id])
+
+  @@index([adminId])
+  @@map("admin_audit_logs")
 }

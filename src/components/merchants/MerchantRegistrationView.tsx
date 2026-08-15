@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Store, Mail, Phone, User, Lock, UploadCloud, MapPin, CheckCircle2, ChevronRight, Check, Eye, EyeOff } from 'lucide-react';
+import { Store, Mail, Phone, User, Lock, UploadCloud, MapPin, CheckCircle2, ChevronRight, Check, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { api } from '../../services/apiClient';
 
@@ -21,10 +21,15 @@ export const MerchantRegistrationView: React.FC = () => {
     category: '',
     description: '',
     logo: null as File | null,
+    ktpFile: null as File | null,
+    npwpFile: null as File | null,
     address: '',
     password: '',
     confirmPassword: '',
-    agreeTerms: false
+    agreeTerms: false,
+    syariahCertified: false,
+    syariahCertNumber: '',
+    syariahCertBody: ''
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -70,6 +75,14 @@ export const MerchantRegistrationView: React.FC = () => {
       newErrors.logo = 'Logo Toko wajib diunggah';
     }
 
+    if (!formData.ktpFile) {
+      newErrors.ktpFile = 'Foto KTP wajib diunggah';
+    }
+
+    if (!formData.npwpFile) {
+      newErrors.npwpFile = 'Foto NPWP wajib diunggah';
+    }
+
     if (!formData.agreeTerms) {
       newErrors.agreeTerms = 'Anda harus menyetujui Syarat & Ketentuan';
     }
@@ -113,17 +126,19 @@ export const MerchantRegistrationView: React.FC = () => {
           category: formData.category,
           description: formData.description,
           address: formData.address,
-          ownerId: currentUser?.id
+          ownerId: currentUser?.id,
+          syariahCertified: formData.syariahCertified,
+          syariahCertNumber: formData.syariahCertNumber,
+          syariahCertBody: formData.syariahCertBody
         });
         setIsSubmitted(true);
-      } catch (error) {
-        addNotification('Gagal mendaftarkan merchant, silakan coba lagi', 'error');
+      } catch (error: any) {
+        addNotification(error.message || 'Gagal mendaftarkan merchant, silakan coba lagi', 'error');
       } finally {
         setIsSubmitting(false);
       }
     } else {
       addNotification('Mohon periksa kembali form Anda', 'error');
-      // Scroll to top
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
@@ -208,6 +223,18 @@ export const MerchantRegistrationView: React.FC = () => {
                   <span className="block text-[11px] text-slate-500 mb-1">Alamat / Kota</span>
                   <span className="font-bold text-slate-800 text-sm">{formData.address}</span>
                 </div>
+                {formData.syariahCertified && (
+                  <>
+                    <div>
+                      <span className="block text-[11px] text-slate-500 mb-1">Nomor Sertifikat Syariah</span>
+                      <span className="font-bold text-slate-800 text-sm">{formData.syariahCertNumber}</span>
+                    </div>
+                    <div>
+                      <span className="block text-[11px] text-slate-500 mb-1">Badan Penerbit</span>
+                      <span className="font-bold text-slate-800 text-sm">{formData.syariahCertBody}</span>
+                    </div>
+                  </>
+                )}
                 <div className="sm:col-span-2">
                   <span className="block text-[11px] text-slate-500 mb-1.5">Deskripsi Toko</span>
                   <p className="text-sm text-slate-700 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-100">
@@ -394,6 +421,108 @@ export const MerchantRegistrationView: React.FC = () => {
                 </div>
                 {errors.logo && <p className="text-rose-500 text-xs mt-1">{errors.logo}</p>}
               </div>
+            </div>
+          </div>
+
+          {/* Section 2b: Dokumen Legalitas & Sertifikasi */}
+          <div>
+            <h3 className="font-bold text-lg text-navy mb-4 flex items-center gap-2 pb-2 border-b border-slate-100">
+              <ShieldCheck className="w-5 h-5 text-cyan-500" />
+              Dokumen Legalitas & Sertifikasi Syariah
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">Unggah Foto KTP Pemilik Toko <span className="text-rose-500">*</span></label>
+                <div className={`border-2 border-dashed ${errors.ktpFile ? 'border-rose-300 bg-rose-50' : 'border-slate-200 bg-slate-50'} rounded-2xl p-4 text-center hover:bg-slate-100 transition-colors relative cursor-pointer group`}>
+                  <input 
+                    type="file" 
+                    accept="image/jpeg, image/png, image/webp, application/pdf" 
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] || null;
+                      setFormData({...formData, ktpFile: file});
+                    }}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  />
+                  {formData.ktpFile ? (
+                    <div className="flex flex-col items-center gap-1">
+                      <CheckCircle2 className="w-6 h-6 text-emerald-500" />
+                      <span className="text-xs font-bold text-slate-700">{formData.ktpFile.name}</span>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-1">
+                      <UploadCloud className="w-5 h-5 text-slate-400" />
+                      <span className="text-xs font-bold text-slate-700">Klik untuk upload KTP (Max 2MB)</span>
+                    </div>
+                  )}
+                </div>
+                {errors.ktpFile && <p className="text-rose-500 text-xs mt-1">{errors.ktpFile}</p>}
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">Unggah Dokumen NPWP Toko / Pribadi <span className="text-rose-500">*</span></label>
+                <div className={`border-2 border-dashed ${errors.npwpFile ? 'border-rose-300 bg-rose-50' : 'border-slate-200 bg-slate-50'} rounded-2xl p-4 text-center hover:bg-slate-100 transition-colors relative cursor-pointer group`}>
+                  <input 
+                    type="file" 
+                    accept="image/jpeg, image/png, image/webp, application/pdf" 
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] || null;
+                      setFormData({...formData, npwpFile: file});
+                    }}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  />
+                  {formData.npwpFile ? (
+                    <div className="flex flex-col items-center gap-1">
+                      <CheckCircle2 className="w-6 h-6 text-emerald-500" />
+                      <span className="text-xs font-bold text-slate-700">{formData.npwpFile.name}</span>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-1">
+                      <UploadCloud className="w-5 h-5 text-slate-400" />
+                      <span className="text-xs font-bold text-slate-700">Klik untuk upload NPWP (Max 2MB)</span>
+                    </div>
+                  )}
+                </div>
+                {errors.npwpFile && <p className="text-rose-500 text-xs mt-1">{errors.npwpFile}</p>}
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="flex items-center gap-3 cursor-pointer group mb-3">
+                  <input 
+                    type="checkbox" 
+                    checked={formData.syariahCertified}
+                    onChange={(e) => setFormData({...formData, syariahCertified: e.target.checked})}
+                    className="w-4 h-4 text-cyan-600 border-slate-350 rounded-sm focus:ring-cyan-500"
+                  />
+                  <span className="text-xs font-bold text-slate-700 select-none">
+                    Toko saya sudah memiliki Sertifikasi Syariah / Halal (Opsional)
+                  </span>
+                </label>
+              </div>
+
+              {formData.syariahCertified && (
+                <>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">Nomor Sertifikat Syariah / Halal</label>
+                    <input
+                      type="text"
+                      value={formData.syariahCertNumber}
+                      onChange={(e) => setFormData({...formData, syariahCertNumber: e.target.value})}
+                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                      placeholder="Contoh: ID31110001234560723"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">Badan Penerbit Sertifikasi</label>
+                    <input
+                      type="text"
+                      value={formData.syariahCertBody}
+                      onChange={(e) => setFormData({...formData, syariahCertBody: e.target.value})}
+                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                      placeholder="Contoh: MUI / BPJPH Kemenag"
+                    />
+                  </div>
+                </>
+              )}
             </div>
           </div>
 

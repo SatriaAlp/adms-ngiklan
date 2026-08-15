@@ -36,6 +36,33 @@ export const MerchantsListView: React.FC = () => {
     rejected: merchants.filter(m => m.verificationStatus === 'REJECTED').length,
   };
 
+  const handleApprove = async (id: string, name: string) => {
+    if (!window.confirm(`Apakah Anda yakin ingin menyetujui pendaftaran toko "${name}"?`)) return;
+    try {
+      await api.updateMerchantVerification(id, 'VERIFIED');
+      addNotification(`Toko "${name}" berhasil disetujui!`, 'success');
+      fetchMerchants();
+    } catch (error: any) {
+      addNotification(error.message || 'Gagal memproses persetujuan toko', 'error');
+    }
+  };
+
+  const handleReject = async (id: string, name: string) => {
+    const reason = window.prompt(`Masukkan alasan penolakan untuk toko "${name}":`);
+    if (reason === null) return;
+    if (!reason.trim()) {
+      addNotification('Alasan penolakan wajib diisi!', 'warning');
+      return;
+    }
+    try {
+      await api.updateMerchantVerification(id, 'REJECTED', reason);
+      addNotification(`Toko "${name}" ditolak dengan alasan: ${reason}`, 'info');
+      fetchMerchants();
+    } catch (error: any) {
+      addNotification(error.message || 'Gagal memproses penolakan toko', 'error');
+    }
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -120,7 +147,7 @@ export const MerchantsListView: React.FC = () => {
                 merchants.map((merchant) => (
                   <tr key={merchant.id} className="hover:bg-slate-50 transition-colors">
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
+                       <div className="flex items-center gap-3">
                         <img 
                           src={merchant.logo || `https://ui-avatars.com/api/?name=${encodeURIComponent(merchant.name)}&background=e2e8f0&color=475569`} 
                           alt={merchant.name} 
@@ -154,9 +181,28 @@ export const MerchantsListView: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <button className="p-1.5 text-slate-400 hover:text-navy hover:bg-slate-50 rounded-md transition-colors">
-                          <MoreVertical className="w-4 h-4" />
-                        </button>
+                        {merchant.verificationStatus === 'PENDING' ? (
+                          <>
+                            <button
+                              onClick={() => handleApprove(merchant.id, merchant.name)}
+                              className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold rounded-lg transition-all"
+                            >
+                              Setujui
+                            </button>
+                            <button
+                              onClick={() => handleReject(merchant.id, merchant.name)}
+                              className="px-2.5 py-1 bg-rose-600 hover:bg-rose-500 text-white text-[10px] font-bold rounded-lg transition-all"
+                            >
+                              Tolak
+                            </button>
+                          </>
+                        ) : merchant.verificationStatus === 'VERIFIED' ? (
+                          <span className="text-xs text-emerald-600 font-bold">Terverifikasi</span>
+                        ) : merchant.verificationStatus === 'REJECTED' ? (
+                          <span className="text-xs text-rose-600 font-bold">Ditolak</span>
+                        ) : (
+                          <span className="text-xs text-slate-500 font-medium">-</span>
+                        )}
                       </div>
                     </td>
                   </tr>

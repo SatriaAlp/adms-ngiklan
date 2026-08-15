@@ -19,6 +19,8 @@ export interface Merchant {
   banner: string;
   description: string;
   isVerified: boolean;
+  verificationStatus?: 'PENDING' | 'VERIFIED' | 'REJECTED' | 'SUSPENDED';
+  verificationNotes?: string;
   rating: number;
   reviewCount: number;
   totalProducts: number;
