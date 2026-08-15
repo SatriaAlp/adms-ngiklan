@@ -758,6 +758,116 @@ Layanan Bantuan ADMS Support:
 WhatsApp: +62 812-3456-7890
 Email: support@armadadigitalmarketing.top
 
+  // ==========================================
+  // PUBLIC API - FOR CUSTOMER / MARKETPLACE
+  // ==========================================
+
+  app.get("/api/public/products", async (req, res) => {
+    try {
+      const { search, category } = req.query;
+      const whereClause: any = {
+        status: { in: ['ACTIVE', 'APPROVED'] }
+      };
+      
+      if (search) {
+        whereClause.title = { contains: String(search) };
+      }
+      
+      if (category && category !== 'ALL') {
+        whereClause.category = { slug: String(category) };
+      }
+
+      const products = await prisma.product.findMany({
+        where: whereClause,
+        include: { merchant: true, category: true },
+        orderBy: { createdAt: 'desc' },
+      });
+      res.json(products);
+    } catch (error) {
+      console.error('Error fetching public products:', error);
+      res.status(500).json({ error: "Gagal mengambil data produk" });
+    }
+  });
+
+  app.post("/api/public/merchants", async (req, res) => {
+    try {
+      const { fullName, email, whatsapp, storeName, storeUsername, description, address } = req.body;
+      
+      // Check if user exists by email, if not create dummy user (in real app, this is handled by Auth)
+      let user = await prisma.user.findUnique({ where: { email } });
+      if (!user) {
+        user = await prisma.user.create({
+          data: {
+            name: fullName,
+            email,
+            phone: whatsapp,
+            passwordHash: 'dummy_hash', // In real app, hash the password
+            role: 'USER'
+          }
+        });
+      }
+
+      const merchant = await prisma.merchant.create({
+        data: {
+          ownerId: user.id,
+          name: storeName,
+          slug: storeUsername,
+          description: description,
+          contactWhatsapp: whatsapp,
+          location: address,
+          verificationStatus: 'PENDING'
+        }
+      });
+      
+      res.json(merchant);
+    } catch (error) {
+      console.error('Error registering merchant:', error);
+      res.status(500).json({ error: "Gagal mendaftar merchant" });
+    }
+  });
+
+  // ==========================================
+  // MERCHANT API 
+  // ==========================================
+
+  app.post("/api/merchant/products", async (req, res) => {
+    try {
+      const { title, slug, price, discountPrice, categoryId, shortDescription, fullDescription } = req.body;
+      
+      // For demo purposes, fetch the first merchant or error
+      const merchant = await prisma.merchant.findFirst();
+      if (!merchant) {
+        return res.status(400).json({ error: "Tidak ada merchant terdaftar" });
+      }
+
+      // Check if category exists or use the first one
+      let actualCategoryId = categoryId;
+      if (!actualCategoryId) {
+        const cat = await prisma.category.findFirst();
+        if (cat) actualCategoryId = cat.id;
+      }
+
+      const product = await prisma.product.create({
+        data: {
+          merchantId: merchant.id,
+          title,
+          slug: slug || title.toLowerCase().replace(/\s+/g, '-'),
+          price: parseFloat(price) || 0,
+          discountPrice: discountPrice ? parseFloat(discountPrice) : null,
+          categoryId: actualCategoryId,
+          shortDescription: shortDescription || '',
+          fullDescription: fullDescription || '',
+          status: 'PENDING_REVIEW'
+        }
+      });
+      
+      res.json(product);
+    } catch (error) {
+      console.error('Error creating product:', error);
+      res.status(500).json({ error: "Gagal membuat produk" });
+    }
+  });
+
 =======================================================`);
   });
 

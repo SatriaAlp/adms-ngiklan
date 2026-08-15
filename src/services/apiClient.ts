@@ -16,7 +16,8 @@ class ApiClient {
     // const token = localStorage.getItem('token');
     // if (token) headers['Authorization'] = `Bearer ${token}`;
 
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    const url = endpoint.startsWith('/api/') ? endpoint : `${API_BASE_URL}${endpoint}`;
+    const response = await fetch(url, {
       ...options,
       headers,
     });
@@ -286,6 +287,29 @@ class ApiClient {
 
   async getSecurityLogs() {
     return this.request<any[]>('/security/logs');
+  }
+
+  // ==========================================
+  // PUBLIC & MERCHANT API
+  // ==========================================
+
+  async getPublicProducts(params?: { search?: string; category?: string }) {
+    const query = new URLSearchParams(params as any).toString();
+    return this.request<any[]>(`/api/public/products?${query}`);
+  }
+
+  async registerMerchant(data: any) {
+    return this.request<any>('/api/public/merchants', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async createMerchantProduct(data: any) {
+    return this.request<any>('/api/merchant/products', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
   }
 
 }
