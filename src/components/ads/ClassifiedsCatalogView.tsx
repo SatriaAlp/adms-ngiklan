@@ -77,7 +77,7 @@ export const ClassifiedsCatalogView: React.FC = () => {
         matchesCondition && 
         matchesMinPrice && 
         matchesMaxPrice && 
-        ad.status === 'published'
+        (ad.status === 'published' || ad.status === 'pending')
       );
     })
     .sort((a, b) => {
@@ -142,7 +142,7 @@ export const ClassifiedsCatalogView: React.FC = () => {
             </div>
 
             <button
-              onClick={() => navigate('pasang-iklan-gratis')}
+              onClick={() => navigate('buat-iklan-gratis')}
               className="w-full md:w-auto bg-gold hover:bg-gold/90 text-navy font-bold text-xs px-6 py-3.5 rounded-xl shadow-lg flex items-center justify-center gap-1.5 transition-all active:scale-[0.98] shrink-0"
             >
               <Zap className="w-4 h-4 fill-navy text-navy" />

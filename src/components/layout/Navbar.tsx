@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
 import { AdmsLogo } from '../common/AdmsLogo';
 import {
@@ -15,8 +15,12 @@ import {
   PlusCircle,
   Sparkles,
   LogOut,
+  Bell,
+  Settings,
+  ChevronDown,
 } from 'lucide-react';
 import { UserRole } from '../../types';
+import { useNavigate } from 'react-router-dom';
 
 export const Navbar: React.FC = () => {
   const {
@@ -34,9 +38,29 @@ export const Navbar: React.FC = () => {
     setCartDrawerTab,
     addNotification,
     setPendingPostAd,
+    loginModalDefaultTab,
+    setLoginModalDefaultTab,
+    currentUser,
   } = useApp();
 
+  const navigateReactRouter = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setProfileDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
   const totalCartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   const handleNav = (tab: string) => {
@@ -135,88 +159,141 @@ export const Navbar: React.FC = () => {
             )}
           </button>
 
-          {/* Cart Drawer Toggle */}
+          {/* Notification Icon */}
           <button
-            onClick={() => {
-              setCartDrawerTab('cart');
-              setIsCartOpen(true);
-            }}
             className="relative p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
-            title="Keranjang Belanja"
+            title="Notifikasi"
           >
-            <ShoppingBag className="w-4 h-4" />
-            {totalCartCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-gold text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
-                {totalCartCount}
-              </span>
-            )}
+            <Bell className="w-4 h-4" />
+            <span className="absolute top-1 right-1 w-2 h-2 bg-rose-500 rounded-full"></span>
           </button>
 
-          {/* Dashboard Direct Button / Login Button */}
+          {/* Auth Actions (Masuk/Daftar) or Profile Dropdown */}
           {!isLoggedIn ? (
-            <button
-              onClick={() => handleNav('marketplace')}
-              className="px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 font-bold text-xs flex items-center gap-1 transition-all hidden md:flex"
-            >
-              <ShoppingBag className="w-3.5 h-3.5 text-slate-600" />
-              <span>Marketplace</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  setLoginModalDefaultTab('login');
+                  setIsLoginModalOpen(true);
+                }}
+                className="px-4 py-2 text-xs sm:text-sm font-bold text-navy border border-navy hover:bg-navy/5 rounded-xl transition-all"
+              >
+                Masuk
+              </button>
+              <button
+                onClick={() => {
+                  setLoginModalDefaultTab('register');
+                  setIsLoginModalOpen(true);
+                }}
+                className="px-4 py-2 text-xs sm:text-sm font-bold text-white bg-navy hover:bg-navy/90 rounded-xl transition-all shadow-xs"
+              >
+                Daftar
+              </button>
+            </div>
           ) : (
-            activeTab !== 'dashboard' && (
+            <div className="relative" ref={dropdownRef}>
               <button
-                onClick={() => handleNav('dashboard')}
-                className={`px-3.5 py-2 rounded-xl border text-xs font-bold flex items-center gap-1 transition-all hidden md:flex ${
-                  activeRole === 'ADMIN'
-                    ? 'bg-rose-50 border-rose-200 text-rose-700 hover:bg-rose-100'
-                    : activeRole === 'MERCHANT'
-                    ? 'bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100'
-                    : 'bg-slate-100 border-slate-200 text-slate-800 hover:bg-slate-200'
-                }`}
+                onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                className="flex items-center gap-1.5 p-1 px-2.5 rounded-full hover:bg-slate-100 transition-colors focus:outline-none"
+                title="Menu Pengguna"
               >
-                Dashboard
-                <ChevronRight className="w-3.5 h-3.5" />
+                <div className="w-9 h-9 rounded-full bg-navy text-gold flex items-center justify-center font-bold text-sm overflow-hidden border border-slate-200">
+                  {currentUser?.avatar ? (
+                    <img src={currentUser.avatar} alt={currentUser.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <User className="w-5 h-5 text-gold" />
+                  )}
+                </div>
+                <ChevronDown className="w-4 h-4 text-slate-600 transition-transform duration-200" style={{ transform: profileDropdownOpen ? 'rotate(180deg)' : 'none' }} />
               </button>
-            )
-          )}
 
-          <div className="flex items-center gap-1.5">
-            {activeTab !== 'dashboard' && (
-              <button
-                onClick={() => handleNav('pasang-iklan-gratis')}
-                className="bg-navy hover:bg-navy/90 text-gold text-xs sm:text-sm font-bold px-4 py-2.5 rounded-xl shadow-xs flex items-center gap-1.5 transition-all active:scale-[0.98]"
-                title="Pasang Iklan Baris Klasifikasi Gratis"
-              >
-                <PlusCircle className="w-4 h-4 text-gold" />
-                <span className="hidden sm:inline">Pasang Iklan Gratis</span>
-                <span className="sm:hidden">Iklan Gratis</span>
-              </button>
-            )}
+              {/* Dropdown Menu */}
+              {profileDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-white border border-slate-200 shadow-lg py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                  <div className="px-4 py-2.5 border-b border-slate-100">
+                    <p className="text-xs text-slate-400 font-medium">Masuk sebagai</p>
+                    <p className="text-sm font-bold text-slate-800 truncate">{currentUser?.name || 'Customer'}</p>
+                    <span className="inline-block mt-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-bold text-[9px] uppercase tracking-wider">
+                      {activeRole}
+                    </span>
+                  </div>
+                  
+                  <button
+                    onClick={() => {
+                      setProfileDropdownOpen(false);
+                      handleNav('dashboard');
+                    }}
+                    className="w-full px-4 py-2 text-left text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                  >
+                    <ShieldCheck className="w-4 h-4 text-slate-450" />
+                    <span>Dashboard</span>
+                  </button>
 
-            {isLoggedIn && (activeRole === 'MERCHANT' || activeRole === 'ADMIN') && (
-              <button
-                onClick={() => handleNav('upload-produk')}
-                className="bg-emerald-500 hover:bg-emerald-600 text-white text-xs sm:text-sm font-bold px-4 py-2.5 rounded-xl shadow-xs flex items-center gap-1.5 transition-all active:scale-[0.98]"
-                title="Unggah Produk Baru ke Marketplace"
-              >
-                <PlusCircle className="w-4 h-4 text-white" />
-                <span className="hidden sm:inline">Upload Produk Marketplace</span>
-                <span className="sm:hidden">Jual Produk</span>
-              </button>
-            )}
-          </div>
+                  <button
+                    onClick={() => {
+                      setProfileDropdownOpen(false);
+                      const basePath = activeRole === 'ADMIN' ? '/admin/dashboard' : activeRole === 'MERCHANT' ? '/merchant/dashboard' : '/customer/dashboard';
+                      navigateReactRouter(`${basePath}/profile`);
+                    }}
+                    className="w-full px-4 py-2 text-left text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                  >
+                    <User className="w-4 h-4 text-slate-450" />
+                    <span>Profil Saya</span>
+                  </button>
 
-          {/* Logout Button */}
-          {activeTab === 'dashboard' && (
-            <button
-              onClick={() => {
-                setIsLoggedIn(false);
-                handleNav('home');
-              }}
-              className="px-3.5 py-2.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs sm:text-sm flex items-center gap-1.5 transition-all"
-            >
-              <LogOut className="w-4 h-4 text-rose-600 animate-pulse" />
-              <span>Logout</span>
-            </button>
+                  {activeRole === 'USER' && (
+                    <button
+                      onClick={() => {
+                        setProfileDropdownOpen(false);
+                        navigateReactRouter('/customer/dashboard');
+                      }}
+                      className="w-full px-4 py-2 text-left text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                    >
+                      <ShoppingBag className="w-4 h-4 text-slate-450" />
+                      <span>Pesanan Saya</span>
+                    </button>
+                  )}
+
+                  <button
+                    onClick={() => {
+                      setProfileDropdownOpen(false);
+                      const basePath = activeRole === 'ADMIN' ? '/admin/dashboard' : activeRole === 'MERCHANT' ? '/merchant/dashboard' : '/customer/dashboard';
+                      navigateReactRouter(`${basePath}/wishlist`);
+                    }}
+                    className="w-full px-4 py-2 text-left text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                  >
+                    <Heart className="w-4 h-4 text-slate-450" />
+                    <span>Wishlist Saya</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setProfileDropdownOpen(false);
+                      const basePath = activeRole === 'ADMIN' ? '/admin/dashboard' : activeRole === 'MERCHANT' ? '/merchant/dashboard' : '/customer/dashboard';
+                      navigateReactRouter(`${basePath}/settings`);
+                    }}
+                    className="w-full px-4 py-2 text-left text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                  >
+                    <Settings className="w-4 h-4 text-slate-450" />
+                    <span>Pengaturan Akun</span>
+                  </button>
+
+                  <div className="border-t border-slate-100 my-1"></div>
+
+                  <button
+                    onClick={() => {
+                      setProfileDropdownOpen(false);
+                      setIsLoggedIn(false);
+                      handleNav('home');
+                    }}
+                    className="w-full px-4 py-2.5 text-left text-xs font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-2"
+                  >
+                    <LogOut className="w-4 h-4 text-rose-500" />
+                    <span>Logout</span>
+                  </button>
+                </div>
+              )}
+            </div>
           )}
 
           {/* Mobile Hamburger Toggle */}
@@ -276,21 +353,52 @@ export const Navbar: React.FC = () => {
             </div>
 
           <div className="pt-2 flex flex-col gap-2">
-            {activeTab === 'dashboard' ? (
-              <button
-                onClick={() => handleNav('home')}
-                className="w-full py-3 rounded-xl bg-rose-600 border border-rose-600 text-center text-xs font-bold text-white flex items-center justify-center gap-2"
-              >
-                <LogOut className="w-4 h-4" />
-                <span>Logout</span>
-              </button>
+            {!isLoggedIn ? (
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    setLoginModalDefaultTab('login');
+                    setIsLoginModalOpen(true);
+                  }}
+                  className="w-full py-3 rounded-xl border border-navy text-center text-xs font-bold text-navy flex items-center justify-center gap-2"
+                >
+                  Masuk
+                </button>
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    setLoginModalDefaultTab('register');
+                    setIsLoginModalOpen(true);
+                  }}
+                  className="w-full py-3 rounded-xl bg-navy border border-navy text-center text-xs font-bold text-white flex items-center justify-center gap-2"
+                >
+                  Daftar
+                </button>
+              </div>
             ) : (
-              <button
-                onClick={() => handleNav('dashboard')}
-                className="w-full py-3 rounded-xl bg-navy border border-navy text-center text-xs font-bold text-white flex items-center justify-center gap-2"
-              >
-                Buka {activeRole === 'ADMIN' ? 'Admin' : activeRole === 'MERCHANT' ? 'Merchant' : 'User'} Dashboard
-              </button>
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    handleNav('dashboard');
+                  }}
+                  className="w-full py-3 rounded-xl bg-navy border border-navy text-center text-xs font-bold text-white flex items-center justify-center gap-2"
+                >
+                  Buka {activeRole === 'ADMIN' ? 'Admin' : activeRole === 'MERCHANT' ? 'Merchant' : 'User'} Dashboard
+                </button>
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    setIsLoggedIn(false);
+                    handleNav('home');
+                  }}
+                  className="w-full py-3 rounded-xl bg-rose-600 border border-rose-600 text-center text-xs font-bold text-white flex items-center justify-center gap-2"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Logout</span>
+                </button>
+              </div>
             )}
           </div>
         </div>

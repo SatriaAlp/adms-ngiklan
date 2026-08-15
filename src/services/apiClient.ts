@@ -312,6 +312,17 @@ class ApiClient {
     });
   }
 
+  async getPublicAds() {
+    return this.request<any[]>('/api/public/ads');
+  }
+
+  async createPublicAd(data: any) {
+    return this.request<any>('/api/public/ads', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
 }
 
 export const api = new ApiClient();

@@ -287,6 +287,25 @@ export const DashboardView: React.FC = () => {
                     </div>
                   </div>
 
+                  {/* Buka Toko / Become Merchant CTA Card */}
+                  <div className="bg-gradient-to-r from-slate-950 to-slate-900 text-white p-6 rounded-2xl border border-slate-800 shadow-md flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="space-y-1 text-center sm:text-left">
+                      <h4 className="font-bold text-base flex items-center justify-center sm:justify-start gap-1.5 text-gold">
+                        <Sparkles className="w-5 h-5 text-gold animate-bounce" />
+                        Buka Toko & Jual Produk Digital Anda!
+                      </h4>
+                      <p className="text-xs text-slate-300 max-w-xl">
+                        Daftar menjadi Merchant Partner PT. Armada Digital Marketing Syariah secara gratis. Jual template website, desain grafis, e-book, source code, dan lainnya dengan komisi bersahabat!
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => navigate('daftar-merchant')}
+                      className="px-5 py-2.5 bg-gold hover:bg-gold/90 text-navy font-bold text-xs rounded-xl shadow-xs transition-all transform active:scale-95 shrink-0"
+                    >
+                      Buka Toko / Daftar Merchant
+                    </button>
+                  </div>
+
                   <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-4 shadow-xs">
                     <h3 className="font-bold text-lg text-slate-900">Riwayat Pembelian & Download File</h3>
                     <div className="space-y-3">

@@ -77,11 +77,16 @@ const MainContent: React.FC = () => {
           } />
           <Route path="/home" element={<Navigate to="/" replace />} />
           <Route path="/iklan-gratis" element={<ClassifiedsCatalogView />} />
-          <Route path="/pasang-iklan-gratis" element={<PostFreeAdView mode="landing" />} />
-          <Route path="/buat-iklan-gratis" element={<PostFreeAdView mode="wizard" />} />
+          <Route path="/buat-iklan-gratis" element={<PostFreeAdView />} />
           <Route path="/upload-produk" element={<UploadProductView />} />
           <Route path="/daftar-merchant" element={<MerchantRegistrationView />} />
           <Route path="/bantuan" element={<HelpView />} />
+          <Route path="/customer/dashboard" element={<DashboardView />} />
+          <Route path="/customer/dashboard/*" element={<DashboardView />} />
+          <Route path="/merchant/dashboard" element={<DashboardView />} />
+          <Route path="/merchant/dashboard/*" element={<DashboardView />} />
+          <Route path="/admin/dashboard" element={<DashboardView />} />
+          <Route path="/admin/dashboard/*" element={<DashboardView />} />
           <Route path="/dashboard" element={<DashboardView />} />
           <Route path="/dashboard/*" element={<DashboardView />} />
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -9,11 +9,7 @@ import {
 } from 'lucide-react';
 import { UserRole } from '../../types';
 
-interface PostFreeAdViewProps {
-  mode?: 'landing' | 'wizard';
-}
-
-export const PostFreeAdView: React.FC<PostFreeAdViewProps> = ({ mode = 'landing' }) => {
+export const PostFreeAdView: React.FC = () => {
   const { 
     createAd, 
     categories, 
@@ -49,6 +45,7 @@ export const PostFreeAdView: React.FC<PostFreeAdViewProps> = ({ mode = 'landing'
   // Package/Publishing states
   const [adType, setAdType] = useState<'free' | 'premium'>('free');
   const [selectedPackageId, setSelectedPackageId] = useState(adPackages[0]?.id || 'pkg-1');
+  const [isUploading, setIsUploading] = useState<boolean>(false);
 
   // Pre-fill contact details from current user
   useEffect(() => {
@@ -59,12 +56,7 @@ export const PostFreeAdView: React.FC<PostFreeAdViewProps> = ({ mode = 'landing'
     }
   }, [currentUser]);
 
-  // Listen for login completion to advance to step 7
-  useEffect(() => {
-    if (isLoggedIn && step === 6 && !pendingAdPublishPayload) {
-      setStep(7);
-    }
-  }, [isLoggedIn, step, pendingAdPublishPayload]);
+
 
   // Preset location listings
   const locationsData: { [prov: string]: string[] } = {
@@ -188,258 +180,20 @@ export const PostFreeAdView: React.FC<PostFreeAdViewProps> = ({ mode = 'landing'
       return;
     }
 
-    createAd(payload);
-    setStep(7);
-    addNotification('Iklan berhasil dikirim dan siap ditinjau oleh Admin!', 'success');
+    setIsUploading(true);
+    setTimeout(async () => {
+      try {
+        await createAd(payload);
+        setIsUploading(false);
+        setStep(7);
+        addNotification('Iklan berhasil dikirim dan siap ditinjau oleh Admin!', 'success');
+      } catch (error) {
+        setIsUploading(false);
+      }
+    }, 1500);
   };
 
-  if (mode === 'landing') {
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12 animate-fade-in">
-        {/* Hero Section */}
-        <div className="relative rounded-3xl bg-gradient-to-br from-navy-dark via-navy to-navy-light border border-navy-dark p-8 sm:p-12 overflow-hidden shadow-2xl text-white">
-          {/* Decorative glows */}
-          <div className="absolute -top-20 -left-20 w-[350px] h-[350px] bg-emerald-500/10 rounded-full blur-[100px] pointer-events-none opacity-40"></div>
-          <div className="absolute -bottom-20 -right-20 w-[300px] h-[300px] bg-gold/10 rounded-full blur-[90px] pointer-events-none opacity-30"></div>
 
-          <div className="relative z-10 max-w-3xl space-y-6">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-white/5 border border-white/10 backdrop-blur-md text-gold text-xs font-bold">
-              <Sparkles className="w-3.5 h-3.5 text-gold" /> Pasang Iklan Baris Klasifikasi Gratis
-            </div>
-
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-tight tracking-tight">
-              Pasang Iklan Anda <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent font-black">Sekarang Juga!</span>
-            </h1>
-
-            <p className="text-slate-350 text-sm sm:text-base leading-relaxed font-normal max-w-2xl">
-              Jangkau ribuan calon pembeli potensial di seluruh Indonesia dengan cepat, mudah, dan Rp0 biaya pasang! Iklan Anda akan ditampilkan di direktori classifieds kami secara instan.
-            </p>
-
-            <div className="pt-2">
-              <button
-                onClick={() => navigate('buat-iklan-gratis')}
-                className="w-full sm:w-auto bg-gold hover:bg-gold/90 text-navy font-bold text-sm sm:text-base px-8 py-3.5 rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all active:scale-[0.98] cursor-pointer"
-              >
-                <PlusCircle className="w-5 h-5 text-navy" />
-                <span>Mulai Pasang Iklan Gratis</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Categories Section (inspired by ngiklan.oketheme.com Kategori) */}
-        <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-3">
-            <div>
-              <h3 className="font-extrabold text-lg text-slate-900">Kategori Iklan Baris</h3>
-              <p className="text-xs text-slate-500 font-medium">Pilih kategori iklan yang sesuai untuk produk atau jasa Anda.</p>
-            </div>
-            <span className="text-[10px] bg-slate-100 text-slate-500 font-bold px-2 py-0.5 rounded uppercase tracking-wider shrink-0 w-fit">
-              Classifieds Categories
-            </span>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">
-            {[
-              { name: 'Mobil', icon: Car, color: 'bg-blue-50 text-blue-600 border-blue-100 hover:bg-blue-100/50' },
-              { name: 'Motor', icon: Car, color: 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100/50' },
-              { name: 'Handphone', icon: Smartphone, color: 'bg-purple-50 text-purple-600 border-purple-100 hover:bg-purple-100/50' },
-              { name: 'Properti', icon: Home, color: 'bg-amber-50 text-amber-600 border-amber-100 hover:bg-amber-100/50' },
-              { name: 'Elektronik', icon: Tv, color: 'bg-rose-50 text-rose-600 border-rose-100 hover:bg-rose-100/50' },
-              { name: 'Jasa', icon: Briefcase, color: 'bg-cyan-50 text-cyan-600 border-cyan-100 hover:bg-cyan-100/50' },
-              { name: 'Rumah Tangga', icon: Home, color: 'bg-indigo-50 text-indigo-600 border-indigo-100 hover:bg-indigo-100/50' },
-              { name: 'Hobi', icon: Heart, color: 'bg-teal-50 text-teal-600 border-teal-100 hover:bg-teal-100/50' },
-            ].map((cat, idx) => (
-              <button
-                key={idx}
-                onClick={() => {
-                  setCategory(cat.name === 'Elektronik' || cat.name === 'Rumah Tangga' || cat.name === 'Hobi' ? 'Handphone' : cat.name);
-                  navigate('buat-iklan-gratis');
-                }}
-                className={`flex flex-col items-center justify-center p-4 rounded-2xl border text-center transition-all duration-300 group cursor-pointer ${cat.color}`}
-              >
-                <div className="p-3 rounded-xl bg-white shadow-xs group-hover:scale-110 transition-transform">
-                  <cat.icon className="w-5 h-5" />
-                </div>
-                <span className="text-[11px] font-bold mt-2.5 whitespace-nowrap">{cat.name}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Benefits Section */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs flex items-start gap-4">
-            <div className="p-3 rounded-xl bg-amber-50 text-amber-500 border border-amber-100">
-              <Sparkles className="w-5 h-5" />
-            </div>
-            <div>
-              <h4 className="font-extrabold text-sm text-slate-900">Iklan Gratis Rp0</h4>
-              <p className="text-xs text-slate-500 mt-1 leading-relaxed">Pasang iklan Anda secara gratis tanpa dipungut biaya sepeser pun selama 30 hari penuh.</p>
-            </div>
-          </div>
-          <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs flex items-start gap-4">
-            <div className="p-3 rounded-xl bg-cyan-50 text-cyan-500 border border-cyan-100">
-              <ShieldCheck className="w-5 h-5" />
-            </div>
-            <div>
-              <h4 className="font-extrabold text-sm text-slate-900">Moderasi Cepat & Aman</h4>
-              <p className="text-xs text-slate-500 mt-1 leading-relaxed">Setiap iklan ditinjau secara berkala untuk menjaga keaslian produk dan menghindari penipuan.</p>
-            </div>
-          </div>
-          <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-xs flex items-start gap-4">
-            <div className="p-3 rounded-xl bg-emerald-50 text-emerald-500 border border-emerald-100">
-              <Zap className="w-5 h-5" />
-            </div>
-            <div>
-              <h4 className="font-extrabold text-sm text-slate-900">Premium Boost</h4>
-              <p className="text-xs text-slate-500 mt-1 leading-relaxed">Tingkatkan iklan Anda ke tingkat Premium VIP Sponsor agar langsung tampil di beranda depan.</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Latest Ads Listing (inspired by ngiklan.oketheme.com Iklan Terbaru) */}
-        <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-3">
-            <div>
-              <h3 className="font-extrabold text-lg text-slate-900">Iklan Klasifikasi Terbaru</h3>
-              <p className="text-xs text-slate-500 font-medium">Lihat apa yang dipromosikan orang lain saat ini.</p>
-            </div>
-            <span className="text-[10px] bg-slate-100 text-slate-500 font-bold px-2 py-0.5 rounded uppercase tracking-wider shrink-0 w-fit">
-              Latest Classified Ads
-            </span>
-          </div>
-
-          {ads.length === 0 ? (
-            <div className="text-center py-12 bg-white border border-slate-200 rounded-3xl">
-              <p className="text-xs text-slate-500 font-medium">Belum ada iklan baris terpasang.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {ads.slice(0, 8).map((ad) => (
-                <div key={ad.id} className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs hover:shadow-md transition-shadow">
-                  <div className="relative h-40 bg-slate-100">
-                    <img 
-                      src={ad.images?.[0] || 'https://images.unsplash.com/photo-1557838923-2985c318be48?w=800&auto=format&fit=crop&q=80'} 
-                      alt={ad.title} 
-                      className="w-full h-full object-cover" 
-                    />
-                    <div className="absolute top-2.5 left-2.5">
-                      {ad.type === 'premium' ? (
-                        <span className="px-2 py-0.5 rounded bg-amber-500 text-slate-950 font-black text-[9px] uppercase tracking-wider shadow-sm">
-                          VIP Sponsor
-                        </span>
-                      ) : (
-                        <span className="px-2 py-0.5 rounded bg-slate-950/80 text-white font-bold text-[9px] uppercase tracking-wider shadow-sm">
-                          Gratis
-                        </span>
-                      )}
-                    </div>
-                    <span className="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded bg-white/95 text-slate-900 border border-slate-200 font-bold text-[9px] shadow-sm capitalize">
-                      Kondisi: {ad.condition || 'bekas'}
-                    </span>
-                  </div>
-
-                  <div className="p-4 space-y-2">
-                    <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">
-                      {ad.category}
-                    </span>
-                    <h4 className="font-bold text-sm text-slate-900 truncate" title={ad.title}>
-                      {ad.title}
-                    </h4>
-                    <div className="text-sm font-black text-slate-900">
-                      Rp{ad.price.toLocaleString('id-ID')}
-                    </div>
-                  </div>
-
-                  <div className="px-4 py-2.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-500 font-semibold">
-                    <div className="flex items-center gap-1 truncate max-w-[75%]">
-                      <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                      <span className="truncate">{ad.location || 'Indonesia'}</span>
-                    </div>
-                    <span className="text-cyan-600 uppercase tracking-widest text-[9px] font-black shrink-0">
-                      Iklan Baris
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Blog / Tips Section */}
-        <div className="space-y-4 pt-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-3">
-            <div>
-              <h3 className="font-extrabold text-lg text-slate-900">Tips & Panduan Beriklan Efektif</h3>
-              <p className="text-xs text-slate-500 font-medium">Pelajari cara memaksimalkan promosi produk dan jasa Anda agar cepat laku.</p>
-            </div>
-            <span className="text-[10px] bg-slate-100 text-slate-500 font-bold px-2 py-0.5 rounded uppercase tracking-wider shrink-0 w-fit">
-              Classifieds Blog
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              {
-                category: 'Tips Penjualan',
-                title: '5 Cara Menulis Judul Iklan yang Memikat Pembeli',
-                excerpt: "Judul iklan adalah hal pertama yang dilihat calon pembeli. Gunakan formula 'Kata Kerja + Nama Produk + Kelebihan + Harga Coret' untuk hasil maksimal.",
-                date: '12 Agustus 2026',
-                readTime: '3 min read',
-                image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&auto=format&fit=crop&q=80',
-              },
-              {
-                category: 'Strategi Promosi',
-                title: 'Pentingnya Foto Produk Berkualitas Tinggi untuk Iklan Anda',
-                excerpt: 'Iklan dengan foto produk asli dan tajam mendapatkan klik 80% lebih banyak. Simak tips pencahayaan sederhana menggunakan smartphone Anda.',
-                date: '10 Agustus 2026',
-                readTime: '4 min read',
-                image: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=600&auto=format&fit=crop&q=80',
-              },
-              {
-                category: 'Keamanan',
-                title: 'Panduan Jual Beli Aman: Hindari Upaya Penipuan Online',
-                excerpt: 'Selalu gunakan fitur WhatsApp resmi, jangan berikan kode OTP, dan pastikan transaksi pembayaran menggunakan payment gateway resmi ADMS.',
-                date: '08 Agustus 2026',
-                readTime: '5 min read',
-                image: 'https://images.unsplash.com/photo-1557200134-90327ee9fafa?w=600&auto=format&fit=crop&q=80',
-              }
-            ].map((post, idx) => (
-              <div key={idx} className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between">
-                <div>
-                  <div className="h-44 overflow-hidden relative bg-slate-100">
-                    <img src={post.image} alt={post.title} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
-                    <span className="absolute top-3 left-3 px-2 py-0.5 rounded bg-navy text-gold font-bold text-[9px] uppercase tracking-wider">
-                      {post.category}
-                    </span>
-                  </div>
-                  <div className="p-5 space-y-2">
-                    <h4 className="font-extrabold text-sm text-slate-900 hover:text-cyan-600 transition-colors cursor-pointer leading-snug line-clamp-2">
-                      {post.title}
-                    </h4>
-                    <p className="text-xs text-slate-500 leading-relaxed font-normal line-clamp-3">
-                      {post.excerpt}
-                    </p>
-                  </div>
-                </div>
-                <div className="px-5 py-3.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400 font-semibold mt-auto">
-                  <div className="flex items-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                    <span>{post.date}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <Clock className="w-3.5 h-3.5 text-slate-400" />
-                    <span>{post.readTime}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
@@ -903,7 +657,8 @@ export const PostFreeAdView: React.FC<PostFreeAdViewProps> = ({ mode = 'landing'
                   <button
                     type="button"
                     onClick={handlePrev}
-                    className="px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                    disabled={isUploading}
+                    className="px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <ArrowLeft className="w-4 h-4" />
                     Kembali
@@ -925,10 +680,23 @@ export const PostFreeAdView: React.FC<PostFreeAdViewProps> = ({ mode = 'landing'
                   <button
                     type="button"
                     onClick={() => handlePublish('pending')}
-                    className="px-5 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs flex items-center gap-1.5 transition-colors shadow-sm cursor-pointer"
+                    disabled={isUploading}
+                    className="px-5 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 disabled:bg-cyan-400 text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-sm cursor-pointer disabled:cursor-not-allowed"
                   >
-                    <Check className="w-4 h-4" />
-                    Publikasikan Iklan Gratis
+                    {isUploading ? (
+                      <>
+                        <svg className="animate-spin -ml-1 mr-1.5 h-3.5 w-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span>Mengupload...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Check className="w-4 h-4" />
+                        <span>Upload</span>
+                      </>
+                    )}
                   </button>
                 )}
               </div>

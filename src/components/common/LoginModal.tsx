@@ -7,6 +7,7 @@ export const LoginModal: React.FC = () => {
   const {
     isLoginModalOpen,
     setIsLoginModalOpen,
+    loginModalDefaultTab,
     setIsLoggedIn,
     addNotification,
     pendingPostAd,
@@ -27,7 +28,10 @@ export const LoginModal: React.FC = () => {
   const [tab, setTab] = useState<'login' | 'register'>('login');
   
   // Store newly registered accounts in memory during this session
-  const [registeredAccounts, setRegisteredAccounts] = useState<{username: string, email: string, password: string}[]>([]);
+  const [registeredAccounts, setRegisteredAccounts] = useState<{username: string, email: string, password: string}[]>(() => {
+    const saved = localStorage.getItem('adms_registered_accounts');
+    return saved ? JSON.parse(saved) : [];
+  });
   
   // Password visibility states
   const [showPassword, setShowPassword] = useState(false);
@@ -41,11 +45,12 @@ export const LoginModal: React.FC = () => {
       setRegisterUsername('');
       setRegisterEmail('');
       setRegisterPassword('');
-      setTab('login');
+    } else {
+      setTab(loginModalDefaultTab || 'login');
       setShowPassword(false);
       setShowRegisterPassword(false);
     }
-  }, [isLoginModalOpen]);
+  }, [isLoginModalOpen, loginModalDefaultTab]);
 
   if (!isLoginModalOpen) return null;
 
@@ -68,7 +73,7 @@ export const LoginModal: React.FC = () => {
       
       addNotification('Login berhasil! Iklan Anda telah dipublikasikan dan status sedang ditinjau.', 'success');
       
-      if (activeTab === 'pasang-iklan-gratis') {
+      if (activeTab === 'buat-iklan-gratis') {
         // Do not redirect, let PostFreeAdView show the success step
       } else {
         setTimeout(() => {
@@ -79,7 +84,7 @@ export const LoginModal: React.FC = () => {
     }
 
     if (pendingPostAd) {
-      navigate('pasang-iklan-gratis');
+      navigate('buat-iklan-gratis');
       setPendingPostAd(false);
     }
   };
@@ -104,7 +109,7 @@ export const LoginModal: React.FC = () => {
       roleToSet = 'USER';
       name = 'Customer Umum';
     } else if (foundRegistered) {
-      roleToSet = 'MERCHANT'; // Default new registrations to Merchant so they can test selling
+      roleToSet = 'USER'; // Default new registrations to USER
       name = foundRegistered.username;
     } else {
       addNotification('Username atau Password salah! (Atau akun belum terdaftar)', 'error');
@@ -130,12 +135,15 @@ export const LoginModal: React.FC = () => {
   const handleRegisterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Save to memory
-    setRegisteredAccounts([...registeredAccounts, { 
+    const newAccounts = [...registeredAccounts, { 
       username: registerUsername, 
       email: registerEmail, 
       password: registerPassword 
-    }]);
+    }];
+
+    // Save to memory and localStorage
+    setRegisteredAccounts(newAccounts);
+    localStorage.setItem('adms_registered_accounts', JSON.stringify(newAccounts));
 
     // Switch to login tab
     setTab('login');

@@ -106,6 +106,8 @@ interface AppContextType {
   setIsLoggedIn: (open: boolean) => void;
   isLoginModalOpen: boolean;
   setIsLoginModalOpen: (open: boolean) => void;
+  loginModalDefaultTab: 'login' | 'register';
+  setLoginModalDefaultTab: (tab: 'login' | 'register') => void;
   cartDrawerTab: 'cart' | 'wishlist';
   setCartDrawerTab: (tab: 'cart' | 'wishlist') => void;
   pendingPostAd: boolean;
@@ -117,39 +119,53 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [activeRole, setActiveRoleState] = useState<UserRole>('USER');
-  const [currentUser, setCurrentUser] = useState<User>({
-    id: 'usr-1001',
-    name: 'Afifah Rizki',
-    email: 'afifahrizki25@gmail.com',
-    phone: '081234567890',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-    role: 'USER',
-    merchantId: 'm-1',
-    createdAt: '2026-01-01',
+  const [activeRole, setActiveRoleState] = useState<UserRole>(() => {
+    return (localStorage.getItem('adms_active_role') as UserRole) || 'USER';
+  });
+  const [currentUser, setCurrentUser] = useState<User>(() => {
+    const saved = localStorage.getItem('adms_current_user');
+    return saved ? JSON.parse(saved) : {
+      id: 'usr-1001',
+      name: 'Afifah Rizki',
+      email: 'afifahrizki25@gmail.com',
+      phone: '081234567890',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+      role: 'USER',
+      merchantId: 'm-1',
+      createdAt: '2026-01-01',
+    };
   });
 
   const setActiveRole = (role: UserRole, name?: string) => {
     setActiveRoleState(role);
-    setCurrentUser((prev) => ({
-      ...prev,
+    localStorage.setItem('adms_active_role', role);
+    const updatedUser = {
+      ...currentUser,
       role,
       name: name || (role === 'ADMIN' ? 'Administrator' : role === 'MERCHANT' ? 'Merchant Partner' : 'Customer Umum'),
-    }));
+    };
+    setCurrentUser(updatedUser);
+    localStorage.setItem('adms_current_user', JSON.stringify(updatedUser));
   };
 
   const location = useLocation();
   const navigateReactRouter = useNavigate();
 
+  const getDashboardPath = (role: UserRole) => {
+    if (role === 'ADMIN') return '/admin/dashboard';
+    if (role === 'MERCHANT') return '/merchant/dashboard';
+    return '/customer/dashboard';
+  };
+
   // Resolve activeTab from location.pathname
   const getActiveTabFromPath = (path: string) => {
     if (path === '/' || path === '/home') return 'home';
     if (path === '/iklan-gratis') return 'iklan-gratis';
-    if (path === '/pasang-iklan-gratis' || path === '/buat-iklan-gratis') return 'pasang-iklan-gratis';
+    if (path === '/buat-iklan-gratis') return 'buat-iklan-gratis';
     if (path === '/upload-produk') return 'upload-produk';
     if (path === '/daftar-merchant') return 'daftar-merchant';
     if (path === '/bantuan') return 'bantuan';
-    if (path.startsWith('/dashboard')) return 'dashboard';
+    if (path.startsWith('/dashboard') || path.startsWith('/customer/dashboard') || path.startsWith('/merchant/dashboard') || path.startsWith('/admin/dashboard')) return 'dashboard';
     return 'home';
   };
 
@@ -157,15 +173,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Resolve dashboardSubTab from location.pathname
   const getDashboardSubTabFromPath = (path: string) => {
+    let dashboardPathSegment = '';
     if (path.startsWith('/dashboard')) {
-      const segments = path.split('/');
-      const sub = segments[2];
-      if (sub) {
-        return sub === 'ads' ? 'ads-catalog' : 
-               sub === 'merchants' ? 'merchants-catalog' : 
-               sub === 'pricing' ? 'pricing-catalog' : 
-               sub;
-      }
+      dashboardPathSegment = path.substring('/dashboard'.length);
+    } else if (path.startsWith('/customer/dashboard')) {
+      dashboardPathSegment = path.substring('/customer/dashboard'.length);
+    } else if (path.startsWith('/merchant/dashboard')) {
+      dashboardPathSegment = path.substring('/merchant/dashboard'.length);
+    } else if (path.startsWith('/admin/dashboard')) {
+      dashboardPathSegment = path.substring('/admin/dashboard'.length);
+    } else {
+      return 'overview';
+    }
+
+    const segments = dashboardPathSegment.split('/').filter(Boolean);
+    const sub = segments[0];
+    if (sub) {
+      return sub === 'ads' ? 'ads-catalog' :
+        sub === 'merchants' ? 'merchants-catalog' :
+          sub === 'pricing' ? 'pricing-catalog' :
+            sub;
     }
     return 'overview';
   };
@@ -173,16 +200,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const dashboardSubTab = getDashboardSubTabFromPath(location.pathname);
 
   const setDashboardSubTab = (subTab: string) => {
-    const resolvedSubPath = 
-      subTab === 'ads-catalog' ? 'ads' : 
-      subTab === 'merchants-catalog' ? 'merchants' : 
-      subTab === 'pricing-catalog' ? 'pricing' : 
-      subTab;
-    
+    const resolvedSubPath =
+      subTab === 'ads-catalog' ? 'ads' :
+        subTab === 'merchants-catalog' ? 'merchants' :
+          subTab === 'pricing-catalog' ? 'pricing' :
+            subTab;
+
+    const basePath = getDashboardPath(activeRole);
     if (resolvedSubPath === 'overview') {
-      navigateReactRouter('/dashboard');
+      navigateReactRouter(basePath);
     } else {
-      navigateReactRouter(`/dashboard/${resolvedSubPath}`);
+      navigateReactRouter(`${basePath}/${resolvedSubPath}`);
     }
   };
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
@@ -260,9 +288,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const fetchPublicAds = async () => {
+    try {
+      const backendAds = await api.getPublicAds();
+      if (backendAds && backendAds.length > 0) {
+        setAds(backendAds);
+      }
+    } catch (error) {
+      console.error('Failed to fetch public ads', error);
+    }
+  };
+
   React.useEffect(() => {
     fetchProducts();
     fetchCategories();
+    fetchPublicAds();
   }, []);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [wishlist, setWishlist] = useState<string[]>(['prod-1']);
@@ -273,8 +313,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isCartOpen, setIsCartOpen] = useState<boolean>(false);
   const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
   const [isCreateAdModalOpen, setIsCreateAdModalOpen] = useState<boolean>(false);
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
+    return localStorage.getItem('adms_is_logged_in') === 'true';
+  });
   const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
+  const [loginModalDefaultTab, setLoginModalDefaultTab] = useState<'login' | 'register'>('login');
   const [cartDrawerTab, setCartDrawerTab] = useState<'cart' | 'wishlist'>('cart');
   const [pendingPostAd, setPendingPostAd] = useState<boolean>(false);
   const [pendingAdPublishPayload, setPendingAdPublishPayload] = useState<any | null>(null);
@@ -301,7 +344,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setIsLoginModalOpen(true);
       return;
     }
-    if ((tab === 'pasang-iklan-gratis' || tab === 'buat-iklan-gratis') && !isLoggedIn && !forceAccess) {
+    if (tab === 'buat-iklan-gratis' && !isLoggedIn && !forceAccess) {
       addNotification('Silakan login terlebih dahulu untuk memasang iklan gratis.', 'warning');
       setPendingPostAd(true);
       setIsLoginModalOpen(true);
@@ -316,12 +359,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     let path = '/';
-    if (['iklan-gratis', 'pasang-iklan-gratis', 'buat-iklan-gratis', 'upload-produk', 'daftar-merchant', 'bantuan'].includes(tab)) {
+    if (['iklan-gratis', 'buat-iklan-gratis', 'upload-produk', 'daftar-merchant', 'bantuan'].includes(tab)) {
       path = `/${tab}`;
     } else if (tab === 'dashboard') {
-      path = '/dashboard';
+      path = getDashboardPath(activeRole);
     } else if (['marketplace', 'ads', 'merchants', 'pricing'].includes(tab)) {
-      path = `/dashboard/${tab}`;
+      const mappedSub = tab === 'marketplace' ? 'marketplace' :
+                        tab === 'ads' ? 'ads' :
+                        tab === 'merchants' ? 'merchants' :
+                        tab === 'pricing' ? 'pricing' :
+                        tab;
+      path = `${getDashboardPath(activeRole)}/${mappedSub}`;
     }
 
     navigateReactRouter(path);
@@ -329,19 +377,51 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   React.useEffect(() => {
-    if ((location.pathname === '/pasang-iklan-gratis' || location.pathname === '/buat-iklan-gratis') && !isLoggedIn) {
+    localStorage.setItem('adms_is_logged_in', String(isLoggedIn));
+    if (!isLoggedIn) {
+      localStorage.removeItem('adms_active_role');
+      localStorage.removeItem('adms_current_user');
+    }
+  }, [isLoggedIn]);
+
+  React.useEffect(() => {
+    if (location.pathname === '/buat-iklan-gratis' && !isLoggedIn) {
       navigateReactRouter('/');
       setIsLoginModalOpen(true);
       setPendingPostAd(true);
       addNotification('Silakan login terlebih dahulu untuk memasang iklan gratis.', 'warning');
+      return;
     }
-    const isDashboardAccess = location.pathname.startsWith('/dashboard');
-    if (isDashboardAccess && !isLoggedIn) {
-      navigateReactRouter('/');
-      setIsLoginModalOpen(true);
-      addNotification('Silakan masuk (login) terlebih dahulu untuk mengakses area Dashboard.', 'warning');
+    
+    const isDashboardAccess = 
+      location.pathname.startsWith('/dashboard') ||
+      location.pathname.startsWith('/customer/dashboard') ||
+      location.pathname.startsWith('/merchant/dashboard') ||
+      location.pathname.startsWith('/admin/dashboard');
+
+    if (isDashboardAccess) {
+      if (!isLoggedIn) {
+        navigateReactRouter('/');
+        setIsLoginModalOpen(true);
+        addNotification('Silakan masuk (login) terlebih dahulu untuk mengakses area Dashboard.', 'warning');
+        return;
+      }
+
+      // Check role mapping
+      const correctBase = getDashboardPath(activeRole);
+      if (!location.pathname.startsWith(correctBase)) {
+        const subTabSegment = getDashboardSubTabFromPath(location.pathname);
+        const resolvedSubPath = subTabSegment === 'overview' ? '' :
+          subTabSegment === 'ads-catalog' ? '/ads' :
+          subTabSegment === 'merchants-catalog' ? '/merchants' :
+          subTabSegment === 'pricing-catalog' ? '/pricing' :
+          `/${subTabSegment}`;
+
+        navigateReactRouter(`${correctBase}${resolvedSubPath}`);
+        addNotification('Akses dialihkan ke dashboard sesuai role Anda.', 'info');
+      }
     }
-  }, [location.pathname, isLoggedIn]);
+  }, [location.pathname, isLoggedIn, activeRole]);
 
   const addToCart = (product: Product) => {
     setCart((prev) => {
@@ -416,7 +496,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     addNotification('Produk berhasil dihapus', 'info');
   };
 
-  const createAd = (adData: Partial<Advertisement>) => {
+  const createAd = async (adData: Partial<Advertisement>) => {
     const moderation = evaluateAdContent(
       adData.title || '',
       adData.description || '',
@@ -428,7 +508,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return;
     }
 
-    const newAd: Advertisement = {
+    const adPayload: Advertisement = {
       id: `ad-${Date.now()}`,
       title: adData.title || 'Iklan Promosi Baru',
       category: adData.category || 'jasa',
@@ -452,12 +532,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       expiresAt: new Date(Date.now() + (adData.durationDays || 7) * 86400000).toISOString(),
       packageName: adData.type === 'free' ? 'Iklan Gratis' : 'Paket Promosi',
     };
-    setAds((prev) => [newAd, ...prev]);
-    
-    if (moderation.recommendedAction === 'PENDING') {
-      addNotification('Iklan ditahan: ' + moderation.reason, 'warning');
-    } else {
-      addNotification('Iklan berhasil dibuat dan telah ditayangkan secara publik!', 'success');
+
+    try {
+      await api.createPublicAd(adPayload);
+      setAds((prev) => [adPayload, ...prev]);
+
+      if (moderation.recommendedAction === 'PENDING') {
+        addNotification('Iklan ditahan: ' + moderation.reason, 'warning');
+      } else {
+        addNotification('Iklan berhasil dibuat dan telah ditayangkan secara publik!', 'success');
+      }
+    } catch (error) {
+      console.error('Failed to save ad to database:', error);
+      addNotification('Gagal menyimpan iklan ke database.', 'error');
+      throw error;
     }
   };
 
@@ -624,6 +712,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setIsLoggedIn,
         isLoginModalOpen,
         setIsLoginModalOpen,
+        loginModalDefaultTab,
+        setLoginModalDefaultTab,
         cartDrawerTab,
         setCartDrawerTab,
         pendingPostAd,

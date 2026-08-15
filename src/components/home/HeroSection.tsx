@@ -140,7 +140,7 @@ export const HeroSection: React.FC = () => {
               </button>
 
               <button
-                onClick={() => navigate('pasang-iklan-gratis')}
+                onClick={() => navigate('buat-iklan-gratis')}
                 className="w-full sm:w-auto bg-white/5 hover:bg-white/10 border border-white/25 hover:border-white/35 text-white font-bold text-xs sm:text-sm px-6 py-2.5 rounded-lg hover:-translate-y-0.5 transition-all flex items-center justify-center gap-1.5"
               >
                 <PlusCircle className="w-3.5 h-3.5 text-emerald-400" />

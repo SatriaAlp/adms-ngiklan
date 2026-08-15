@@ -26,6 +26,7 @@ model User {
   merchants     Merchant[]
   orders        Order[]
   reviews       Review[]
+  advertisements Advertisement[]
 }
 
 enum Role {
@@ -59,6 +60,7 @@ model Merchant {
 
   owner           User      @relation(fields: [ownerId], references: [id])
   products        Product[]
+  advertisements Advertisement[]
 }
 
 enum VerificationStatus {
@@ -186,4 +188,52 @@ model SystemSetting {
   key             String    @unique
   value           String    @db.Text
   updatedAt       DateTime  @updatedAt
+}
+
+model Advertisement {
+  id           String   @id @default(uuid())
+  title        String
+  category     String
+  subcategory  String?
+  description  String   @db.Text
+  price        Decimal  @db.Decimal(10, 2)
+  images       String   @db.Text
+  location     String
+  contactName  String
+  whatsapp     String
+  websiteUrl   String?
+  condition    String   @default("bekas")
+  tags         String?  @db.Text
+  durationDays Int      @default(7)
+  type         String   @default("free")
+  status       String   @default("pending")
+  merchantId   String?
+  ownerId      String?
+  viewsCount   Int      @default(0)
+  clicksCount  Int      @default(0)
+  createdAt    DateTime @default(now())
+  expiresAt    DateTime
+  packageName  String?
+
+  merchant     Merchant? @relation(fields: [merchantId], references: [id])
+  owner        User?     @relation(fields: [ownerId], references: [id])
+}
+
+model AdPackage {
+  id                  String   @id @default(uuid())
+  name                String
+  type                String   @default("free")
+  price               Decimal  @db.Decimal(10, 2)
+  durationDays        Int      @default(7)
+  priority            Int      @default(1)
+  maxImages           Int      @default(2)
+  isFeaturedPlacement Boolean  @default(false)
+  isSearchBoost       Boolean  @default(false)
+  isHomepagePlacement Boolean  @default(false)
+  hasAnalytics        Boolean  @default(false)
+  badge               String?
+  description         String?  @db.Text
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 }

@@ -12,7 +12,8 @@ const PORT = 3000;
 async function startServer() {
   const app = express();
   
-  app.use(express.json());
+  app.use(express.json({ limit: "15mb" }));
+  app.use(express.urlencoded({ limit: "15mb", extended: true }));
 
   // Initialize Gemini AI Client for Server-Side Chatbot
   const ai = new GoogleGenAI({
@@ -760,6 +761,85 @@ Layanan Bantuan ADMS Support:
 WhatsApp: +62 812-3456-7890
 Email: support@armadadigitalmarketing.top
 `);
+  });
+
+  // ==========================================
+  // PUBLIC API - ADS / CLASSIFIEDS
+  // ==========================================
+
+  app.get("/api/public/ads", async (req, res) => {
+    try {
+      const ads = await prisma.$queryRawUnsafe<any[]>('SELECT * FROM `Advertisement` ORDER BY `createdAt` DESC');
+      
+      const mappedAds = ads.map(ad => ({
+        id: ad.id,
+        title: ad.title,
+        category: ad.category,
+        subcategory: ad.subcategory || undefined,
+        description: ad.description,
+        price: Number(ad.price) || 0,
+        images: ad.images ? JSON.parse(ad.images) : [],
+        location: ad.location,
+        contactName: ad.contactName,
+        whatsapp: ad.whatsapp,
+        websiteUrl: ad.websiteUrl || undefined,
+        condition: ad.condition,
+        tags: ad.tags ? ad.tags.split(',') : [],
+        durationDays: Number(ad.durationDays) || 7,
+        type: ad.type,
+        status: ad.status,
+        merchantId: ad.merchantId || undefined,
+        ownerId: ad.ownerId || undefined,
+        viewsCount: Number(ad.viewsCount) || 0,
+        clicksCount: Number(ad.clicksCount) || 0,
+        createdAt: ad.createdAt,
+        expiresAt: ad.expiresAt,
+        packageName: ad.packageName || undefined
+      }));
+      res.json(mappedAds);
+    } catch (error) {
+      console.error("Gagal mengambil iklan:", error);
+      res.status(500).json({ error: "Gagal mengambil data iklan baris" });
+    }
+  });
+
+  app.post("/api/public/ads", async (req, res) => {
+    try {
+      const ad = req.body;
+      const id = ad.id || `ad-${Date.now()}`;
+      const title = ad.title || 'Iklan Promosi Baru';
+      const category = ad.category || 'jasa';
+      const subcategory = ad.subcategory || null;
+      const description = ad.description || '';
+      const price = ad.price || 0;
+      const images = JSON.stringify(ad.images || []);
+      const location = ad.location || 'Indonesia';
+      const contactName = ad.contactName || 'Pengiklan';
+      const whatsapp = ad.whatsapp || '';
+      const websiteUrl = ad.websiteUrl || null;
+      const condition = ad.condition || 'bekas';
+      const tags = (ad.tags || []).join(',');
+      const durationDays = ad.durationDays || 7;
+      const type = ad.type || 'free';
+      const status = ad.status || 'pending';
+      const merchantId = ad.merchantId || null;
+      const ownerId = ad.ownerId || null;
+      const viewsCount = ad.viewsCount || 0;
+      const clicksCount = ad.clicksCount || 0;
+      const createdAt = new Date().toISOString();
+      const expiresAt = new Date(Date.now() + durationDays * 86400000).toISOString();
+      const packageName = ad.packageName || 'Iklan Gratis';
+
+      await prisma.$executeRawUnsafe(
+        'INSERT INTO `Advertisement` (`id`, `title`, `category`, `subcategory`, `description`, `price`, `images`, `location`, `contactName`, `whatsapp`, `websiteUrl`, `condition`, `tags`, `durationDays`, `type`, `status`, `merchantId`, `ownerId`, `viewsCount`, `clicksCount`, `createdAt`, `expiresAt`, `packageName`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        id, title, category, subcategory, description, price, images, location, contactName, whatsapp, websiteUrl, condition, tags, durationDays, type, status, merchantId, ownerId, viewsCount, clicksCount, createdAt, expiresAt, packageName
+      );
+
+      res.status(201).json({ success: true, id });
+    } catch (error) {
+      console.error("Gagal membuat iklan:", error);
+      res.status(500).json({ error: "Gagal menyimpan data iklan ke database" });
+    }
   });
 
   // ==========================================
