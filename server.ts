@@ -843,6 +843,52 @@ Email: support@armadadigitalmarketing.top
   });
 
   // ==========================================
+  // AUTH API - REGISTER & LOGIN
+  // ==========================================
+
+  app.post("/api/auth/register", async (req, res) => {
+    try {
+      const { name, email, password, phone } = req.body;
+      
+      const existing = await prisma.user.findUnique({ where: { email } });
+      if (existing) {
+        return res.status(400).json({ error: "Email sudah terdaftar!" });
+      }
+
+      const newUser = await prisma.user.create({
+        data: {
+          name,
+          email,
+          phone: phone || '',
+          passwordHash: password, // Simplified for demo
+          role: 'USER'
+        }
+      });
+
+      res.status(201).json({ success: true, user: newUser });
+    } catch (error) {
+      console.error("Registrasi gagal:", error);
+      res.status(500).json({ error: "Gagal menyimpan data pendaftaran ke database" });
+    }
+  });
+
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      
+      const user = await prisma.user.findUnique({ where: { email } });
+      if (!user || user.passwordHash !== password) {
+        return res.status(401).json({ error: "Email atau Password salah!" });
+      }
+
+      res.json({ success: true, user });
+    } catch (error) {
+      console.error("Login gagal:", error);
+      res.status(500).json({ error: "Gagal memproses login" });
+    }
+  });
+
+  // ==========================================
   // PUBLIC API - FOR CUSTOMER / MARKETPLACE
   // ==========================================
 

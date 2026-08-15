@@ -323,6 +323,20 @@ class ApiClient {
     });
   }
 
+  async registerUser(data: any) {
+    return this.request<any>('/api/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async loginUser(data: any) {
+    return this.request<any>('/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
 }
 
 export const api = new ApiClient();
