@@ -91,7 +91,7 @@ async function main() {
     { title: 'Instagram Ads', category: 'digital-ads', price: 350000, priceType: 'STARTING_FROM', desc: 'Layanan Instagram Ads untuk membantu bisnis menjangkau audiens yang relevan melalui konten iklan visual.' },
     { title: 'TikTok Ads', category: 'digital-ads', price: 350000, priceType: 'STARTING_FROM', desc: 'Layanan TikTok Ads untuk meningkatkan awareness, engagement, traffic, dan potensi konversi bisnis.' },
     { title: 'Google Maps Review', category: 'digital-ads', price: 350000, priceType: 'STARTING_FROM', desc: 'Layanan optimasi kehadiran bisnis pada Google Maps untuk membantu meningkatkan kredibilitas dan visibilitas bisnis.' },
-    
+
     { title: 'Landing Page Conversion', category: 'website-development', price: 999000, priceType: 'STARTING_FROM', desc: 'Landing page yang dirancang untuk mengarahkan pengunjung agar melakukan tindakan seperti menghubungi bisnis, mengisi form, atau melakukan pembelian.' },
     { title: 'Website / Company Profile Corporate', category: 'website-development', price: 1850000, priceType: 'STARTING_FROM', desc: 'Website profesional untuk perusahaan, bisnis, organisasi, dan brand yang membutuhkan tampilan terpercaya dan profesional.' },
     { title: 'E-Commerce', category: 'website-development', price: 4500000, priceType: 'STARTING_FROM', desc: 'Website toko online dengan fitur katalog produk, pembayaran, pemesanan, dan manajemen produk.' },
@@ -151,7 +151,7 @@ async function main() {
 
     // Create Dummy Packages for some products
     if (item.priceType === 'STARTING_FROM') {
-      const existingPackages = await prisma.productPackage.findMany({ where: { productId: product.id }});
+      const existingPackages = await prisma.productPackage.findMany({ where: { productId: product.id } });
       if (existingPackages.length === 0) {
         await prisma.productPackage.createMany({
           data: [

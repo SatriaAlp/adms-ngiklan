@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { X, User, Lock, Eye, EyeOff } from 'lucide-react';
 import { AdmsLogo } from './AdmsLogo';
+import { api } from '../../services/apiClient';
 
 export const LoginModal: React.FC = () => {
   const {
@@ -89,12 +90,38 @@ export const LoginModal: React.FC = () => {
     }
   };
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     let roleToSet: 'ADMIN' | 'MERCHANT' | 'USER' | null = null;
     let name = '';
 
+    // First try database authentication
+    try {
+      const response = await api.loginUser({ email, password });
+      if (response && response.success) {
+        roleToSet = response.user.role === 'SUPER_ADMIN' ? 'ADMIN' : response.user.role;
+        name = response.user.name;
+        
+        setActiveRole(roleToSet as any, name);
+        setIsLoggedIn(true);
+        setIsLoginModalOpen(false);
+        addNotification(`Login berhasil! Selamat datang kembali, ${name}.`, 'success');
+        
+        if (pendingAdPublishPayload || pendingPostAd) {
+          checkPendingPostAd();
+        } else {
+          setTimeout(() => {
+            navigate('dashboard', undefined, true);
+          }, 100);
+        }
+        return;
+      }
+    } catch (dbError) {
+      console.warn("Database login failed, falling back to mock authentication:", dbError);
+    }
+
+    // Fallback Mock authentication
     const foundRegistered = registeredAccounts.find(acc => 
       (acc.username === email || acc.email === email) && acc.password === password
     );
@@ -132,9 +159,28 @@ export const LoginModal: React.FC = () => {
     }
   };
 
-  const handleRegisterSubmit = (e: React.FormEvent) => {
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // First try database registration
+    try {
+      const response = await api.registerUser({
+        name: registerUsername,
+        email: registerEmail,
+        password: registerPassword
+      });
+      if (response && response.success) {
+        addNotification('Pendaftaran ke database berhasil! Silakan login.', 'success');
+      }
+    } catch (dbError: any) {
+      console.warn("Database registration failed, falling back to local mock storage:", dbError);
+      if (dbError.message && dbError.message.includes('Email sudah terdaftar')) {
+        addNotification(dbError.message, 'error');
+        return;
+      }
+    }
+
+    // Local fallback mock registry
     const newAccounts = [...registeredAccounts, { 
       username: registerUsername, 
       email: registerEmail, 

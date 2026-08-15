@@ -4,7 +4,7 @@ import { useApp } from '../../context/AppContext';
 import { api } from '../../services/apiClient';
 
 export const MerchantRegistrationView: React.FC = () => {
-  const { navigate, addNotification } = useApp();
+  const { navigate, addNotification, currentUser } = useApp();
   
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -113,6 +113,7 @@ export const MerchantRegistrationView: React.FC = () => {
           category: formData.category,
           description: formData.description,
           address: formData.address,
+          ownerId: currentUser?.id
         });
         setIsSubmitted(true);
       } catch (error) {
