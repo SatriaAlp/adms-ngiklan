@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
 import { ProductCard } from './ProductCard';
-import { ProductDetailModal } from './ProductDetailModal';
+
 import { Product } from '../../types';
 import { Search, Filter, ShoppingBag, Store, ShieldCheck, X } from 'lucide-react';
 
@@ -18,7 +18,7 @@ export const MarketplaceView: React.FC = () => {
     merchants,
   } = useApp();
 
-  const [selectedProductDetail, setSelectedProductDetail] = useState<Product | null>(null);
+  
   const [sortBy, setSortBy] = useState<'terpopuler' | 'terbaru' | 'murah' | 'mahal'>('terpopuler');
   const [minPrice, setMinPrice] = useState<string>('');
   const [maxPrice, setMaxPrice] = useState<string>('');
@@ -230,7 +230,7 @@ export const MarketplaceView: React.FC = () => {
                     <ProductCard
                       key={p.id}
                       product={p}
-                      onOpenDetail={(product) => setSelectedProductDetail(product)}
+                      
                     />
                   ))}
                 </div>
@@ -273,13 +273,6 @@ export const MarketplaceView: React.FC = () => {
           )}
         </div>
       </div>
-
-      {selectedProductDetail && (
-        <ProductDetailModal
-          product={selectedProductDetail}
-          onClose={() => setSelectedProductDetail(null)}
-        />
-      )}
     </div>
   );
 };
