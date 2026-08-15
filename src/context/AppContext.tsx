@@ -120,25 +120,43 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [activeRole, setActiveRoleState] = useState<UserRole>('USER');
-  const [currentUser, setCurrentUser] = useState<User>({
-    id: 'usr-1001',
-    name: 'Afifah Rizki',
-    email: 'afifahrizki25@gmail.com',
-    phone: '081234567890',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-    role: 'USER',
-    merchantId: 'm-1',
-    createdAt: '2026-01-01',
+  const [activeRole, setActiveRoleState] = useState<UserRole>(() => {
+    return (localStorage.getItem('adms_active_role') as UserRole) || 'USER';
+  });
+
+  const [currentUser, setCurrentUser] = useState<User>(() => {
+    const saved = localStorage.getItem('adms_current_user');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    return {
+      id: 'usr-1001',
+      name: 'Afifah Rizki',
+      email: 'afifahrizki25@gmail.com',
+      phone: '081234567890',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+      role: 'USER',
+      merchantId: 'm-1',
+      createdAt: '2026-01-01',
+    };
   });
 
   const setActiveRole = (role: UserRole, name?: string) => {
     setActiveRoleState(role);
-    setCurrentUser((prev) => ({
-      ...prev,
-      role,
-      name: name || (role === 'ADMIN' ? 'Administrator' : role === 'MERCHANT' ? 'Merchant Partner' : 'Customer Umum'),
-    }));
+    localStorage.setItem('adms_active_role', role);
+    setCurrentUser((prev) => {
+      const updated = {
+        ...prev,
+        role,
+        name: name || (role === 'ADMIN' ? 'Administrator' : role === 'MERCHANT' ? 'Merchant Partner' : 'Customer Umum'),
+      };
+      localStorage.setItem('adms_current_user', JSON.stringify(updated));
+      return updated;
+    });
   };
 
   const [activeTab, setActiveTab] = useState<string>('home');
@@ -249,8 +267,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isCartOpen, setIsCartOpen] = useState<boolean>(false);
   const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
   const [isCreateAdModalOpen, setIsCreateAdModalOpen] = useState<boolean>(false);
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
+    return localStorage.getItem('adms_is_logged_in') === 'true';
+  });
   const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
+
+  React.useEffect(() => {
+    localStorage.setItem('adms_is_logged_in', String(isLoggedIn));
+    if (!isLoggedIn) {
+      localStorage.removeItem('adms_active_role');
+      localStorage.removeItem('adms_current_user');
+      setActiveRoleState('USER');
+    }
+  }, [isLoggedIn]);
   const [cartDrawerTab, setCartDrawerTab] = useState<'cart' | 'wishlist'>('cart');
   const [pendingPostAd, setPendingPostAd] = useState<boolean>(false);
   const [pendingAdPublishPayload, setPendingAdPublishPayload] = useState<any | null>(null);
@@ -277,11 +306,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setIsLoginModalOpen(true);
       return;
     }
-    if (tab === 'pasang-iklan-gratis' && !isLoggedIn && !forceAccess) {
-      addNotification('Silakan login terlebih dahulu untuk memasang iklan gratis.', 'warning');
-      setPendingPostAd(true);
-      setIsLoginModalOpen(true);
-      return;
+    if (tab === 'pasang-iklan-gratis' && !forceAccess) {
+      if (!isLoggedIn) {
+        addNotification('Silakan login terlebih dahulu untuk memasang iklan gratis.', 'warning');
+        setPendingPostAd(true);
+        setIsLoginModalOpen(true);
+        return;
+      }
+      if (activeRole === 'USER') {
+        addNotification('Hanya akun Merchant yang dapat memasang iklan. Silakan mendaftar jadi Merchant terlebih dahulu.', 'warning');
+        return;
+      }
     }
 
     let subTabName = '';

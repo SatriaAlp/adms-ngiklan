@@ -35,6 +35,34 @@ async function main() {
     },
   });
 
+  // 2b. Create Merchant Demo User
+  const merchantUser = await prisma.user.upsert({
+    where: { email: 'merchant@adms.id' },
+    update: {},
+    create: {
+      name: 'Merchant Demo',
+      email: 'merchant@adms.id',
+      phone: '081299998888',
+      passwordHash,
+      role: 'MERCHANT',
+    },
+  });
+
+  // 2c. Create Merchant Demo Store
+  await prisma.merchant.upsert({
+    where: { slug: 'merchant-demo' },
+    update: {},
+    create: {
+      ownerId: merchantUser.id,
+      name: 'Merchant Demo Store',
+      slug: 'merchant-demo',
+      description: 'Toko demo merchant untuk pengujian fitur marketplace ADMS',
+      verificationStatus: 'VERIFIED',
+      location: 'Bandung, Indonesia',
+      contactWhatsapp: '081299998888',
+    },
+  });
+
   // 3. Categories
   const categoriesData = [
     { name: 'Digital Ads', slug: 'digital-ads', iconName: 'Megaphone' },

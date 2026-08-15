@@ -39,6 +39,7 @@ import {
 export const DashboardView: React.FC = () => {
   const {
     activeRole,
+    setActiveRole,
     currentUser,
     orders,
     products,
@@ -218,6 +219,36 @@ export const DashboardView: React.FC = () => {
 
         {/* Dashboard Actions */}
         <div className="flex items-center gap-2">
+          {activeRole === 'USER' && currentUser.merchantId && (
+            <button
+              onClick={() => {
+                setActiveRole('MERCHANT');
+                setDashboardSubTab('overview');
+                addNotification('Beralih ke Dashboard Merchant', 'info');
+              }}
+              className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition-all shadow-sm active:scale-[0.98]"
+              title="Masuk ke Dashboard Merchant Anda"
+            >
+              <Store className="w-4 h-4 text-indigo-200" />
+              <span>Masuk Dashboard Merchant</span>
+            </button>
+          )}
+
+          {activeRole === 'MERCHANT' && (
+            <button
+              onClick={() => {
+                setActiveRole('USER');
+                setDashboardSubTab('overview');
+                addNotification('Beralih ke Dashboard Customer', 'info');
+              }}
+              className="bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl border border-slate-700 flex items-center gap-1.5 transition-all active:scale-[0.98]"
+              title="Ganti ke Mode Customer"
+            >
+              <User className="w-4 h-4 text-cyan-400" />
+              <span>Mode Customer</span>
+            </button>
+          )}
+
           {activeRole === 'MERCHANT' && (
             <button
               onClick={() => navigate('upload-produk')}
@@ -243,7 +274,18 @@ export const DashboardView: React.FC = () => {
       {/* Dashboard Workspace */}
       <div className="flex flex-col gap-6">
         {/* Top Navigation Menu (Horizontal) */}
-        <div className="flex flex-row flex-wrap gap-1.5 p-2 bg-white border border-slate-200 rounded-2xl shadow-xs w-full overflow-x-auto scrollbar-none">
+        <div className="relative">
+          <div
+            className="flex flex-row gap-1.5 p-2 bg-white border border-slate-200 rounded-2xl shadow-xs w-full overflow-x-auto scrollbar-none"
+            onScroll={(e) => {
+              const el = e.currentTarget;
+              const fadeEl = el.nextElementSibling as HTMLElement | null;
+              if (fadeEl) {
+                const isAtEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 10;
+                fadeEl.style.opacity = isAtEnd ? '0' : '1';
+              }
+            }}
+          >
           {/* Common Overview Tab */}
           <button
             onClick={() => setDashboardSubTab('overview')}
@@ -257,20 +299,22 @@ export const DashboardView: React.FC = () => {
             <span>Overview</span>
           </button>
           
-          {/* Customer & Merchant Shared Tabs */}
+           {/* Customer & Merchant Shared Tabs */}
           {(activeRole === 'USER' || activeRole === 'MERCHANT') && (
             <>
-              <button
-                onClick={() => setDashboardSubTab('marketplace')}
-                className={`px-4 py-3 rounded-xl font-bold text-xs flex items-center gap-2.5 transition-all shrink-0 ${
-                  dashboardSubTab === 'marketplace'
-                    ? 'bg-navy/10 text-navy border border-navy/10 shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                }`}
-              >
-                <ShoppingBag className="w-4 h-4" />
-                <span>Marketplace</span>
-              </button>
+              {activeRole === 'USER' && (
+                <button
+                  onClick={() => setDashboardSubTab('marketplace')}
+                  className={`px-4 py-3 rounded-xl font-bold text-xs flex items-center gap-2.5 transition-all shrink-0 ${
+                    dashboardSubTab === 'marketplace'
+                      ? 'bg-navy/10 text-navy border border-navy/10 shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  }`}
+                >
+                  <ShoppingBag className="w-4 h-4" />
+                  <span>Marketplace</span>
+                </button>
+              )}
 
               <button
                 onClick={() => setDashboardSubTab('ads-catalog')}
@@ -284,17 +328,19 @@ export const DashboardView: React.FC = () => {
                 <span>Iklan (Classified)</span>
               </button>
 
-              <button
-                onClick={() => setDashboardSubTab('merchants-catalog')}
-                className={`px-4 py-3 rounded-xl font-bold text-xs flex items-center gap-2.5 transition-all shrink-0 ${
-                  dashboardSubTab === 'merchants-catalog'
-                    ? 'bg-navy/10 text-navy border border-navy/10 shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                }`}
-              >
-                <Store className="w-4 h-4" />
-                <span>Daftar Merchant</span>
-              </button>
+              {activeRole === 'USER' && (
+                <button
+                  onClick={() => setDashboardSubTab('merchants-catalog')}
+                  className={`px-4 py-3 rounded-xl font-bold text-xs flex items-center gap-2.5 transition-all shrink-0 ${
+                    dashboardSubTab === 'merchants-catalog'
+                      ? 'bg-navy/10 text-navy border border-navy/10 shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  }`}
+                >
+                  <Store className="w-4 h-4" />
+                  <span>Daftar Merchant</span>
+                </button>
+              )}
 
               <button
                 onClick={() => setDashboardSubTab('pricing-catalog')}
@@ -418,6 +464,12 @@ export const DashboardView: React.FC = () => {
               </button>
             </>
           )}
+          </div>
+          {/* Right fade scroll indicator */}
+          <div
+            className="absolute right-0 top-0 bottom-0 w-12 pointer-events-none rounded-r-2xl transition-opacity duration-300"
+            style={{ background: 'linear-gradient(to right, transparent, rgba(255,255,255,0.95) 70%)' }}
+          />
         </div>
 
         {/* Content Panel */}
