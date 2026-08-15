@@ -143,7 +143,7 @@ async function main() {
         price: item.price,
         priceType: item.priceType as any,
         shortDescription: item.desc,
-        fullDescription: item.desc + '\\n\\n' + 'ADMS menyediakan layanan profesional yang dikerjakan oleh tim ahli. Proses cepat, hasil transparan dan berorientasi pada kepuasan pelanggan.',
+        fullDescription: item.desc + '\n\n' + 'ADMS menyediakan layanan profesional yang dikerjakan oleh tim ahli. Proses cepat, hasil transparan dan berorientasi pada kepuasan pelanggan.',
         status: 'ACTIVE',
         thumbnail: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&auto=format&fit=crop&q=80', // Dummy placeholder
       },
