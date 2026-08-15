@@ -12,6 +12,10 @@ export const PopularProducts: React.FC<PopularProductsProps> = ({ onOpenDetail }
   const { products } = useApp();
   const popularProducts = products.filter((p) => p.isBestSeller || p.isTrending || p.salesCount > 300);
 
+  if (popularProducts.length === 0) {
+    return null;
+  }
+
   return (
     <section className="py-14 bg-white border-b border-slate-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

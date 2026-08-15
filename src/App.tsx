@@ -18,6 +18,7 @@ import { CtaBanner } from './components/home/CtaBanner';
 
 // Views
 import { ProductDetailModal } from './components/marketplace/ProductDetailModal';
+import { PaymentPopupModal } from './components/marketplace/PaymentPopupModal';
 import { CreateAdModal } from './components/ads/CreateAdModal';
 import { HelpView } from './components/help/HelpView';
 import { DashboardView } from './components/dashboard/DashboardView';
@@ -86,6 +87,7 @@ const MainContent: React.FC = () => {
 
       {/* Global Modals & Overlay Drawers */}
       <ProductDetailModal />
+      <PaymentPopupModal />
       <CreateAdModal />
       <CartDrawer />
       <ChatBotWidget />

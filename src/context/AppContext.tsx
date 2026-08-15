@@ -44,6 +44,10 @@ interface AppContextType {
   activeTab: string;
   navigate: (tab: string, params?: NavigationParams, forceAccess?: boolean) => void;
   selectedProductId: string | null;
+  selectedProduct: Product | null;
+  setSelectedProduct: (product: Product | null) => void;
+  paymentPopupProduct: Product | null;
+  setPaymentPopupProduct: (product: Product | null) => void;
   selectedMerchantId: string | null;
   selectedAdId: string | null;
   selectedCategory: string | null;
@@ -156,6 +160,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [paymentPopupProduct, setPaymentPopupProduct] = useState<Product | null>(null);
   const [selectedMerchantId, setSelectedMerchantId] = useState<string | null>(null);
   const [selectedAdId, setSelectedAdId] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -591,6 +597,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         dashboardSubTab,
         setDashboardSubTab,
         selectedProductId,
+        selectedProduct,
+        setSelectedProduct,
+        paymentPopupProduct,
+        setPaymentPopupProduct,
         selectedMerchantId,
         selectedAdId,
         selectedCategory,
