@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   User,
   UserRole,
@@ -135,22 +136,51 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }));
   };
 
-  const [activeTab, setActiveTab] = useState<string>('home');
-  const [dashboardSubTab, setDashboardSubTabState] = useState<string>('overview');
+  const location = useLocation();
+  const navigateReactRouter = useNavigate();
+
+  // Resolve activeTab from location.pathname
+  const getActiveTabFromPath = (path: string) => {
+    if (path === '/' || path === '/home') return 'home';
+    if (path === '/iklan-gratis') return 'iklan-gratis';
+    if (path === '/pasang-iklan-gratis' || path === '/buat-iklan-gratis') return 'pasang-iklan-gratis';
+    if (path === '/upload-produk') return 'upload-produk';
+    if (path === '/daftar-merchant') return 'daftar-merchant';
+    if (path === '/bantuan') return 'bantuan';
+    if (path.startsWith('/dashboard')) return 'dashboard';
+    return 'home';
+  };
+
+  const activeTab = getActiveTabFromPath(location.pathname);
+
+  // Resolve dashboardSubTab from location.pathname
+  const getDashboardSubTabFromPath = (path: string) => {
+    if (path.startsWith('/dashboard')) {
+      const segments = path.split('/');
+      const sub = segments[2];
+      if (sub) {
+        return sub === 'ads' ? 'ads-catalog' : 
+               sub === 'merchants' ? 'merchants-catalog' : 
+               sub === 'pricing' ? 'pricing-catalog' : 
+               sub;
+      }
+    }
+    return 'overview';
+  };
+
+  const dashboardSubTab = getDashboardSubTabFromPath(location.pathname);
 
   const setDashboardSubTab = (subTab: string) => {
-    setDashboardSubTabState(subTab);
-    let subSegment = subTab;
-    if (subTab === 'ads-catalog') subSegment = 'ads';
-    else if (subTab === 'merchants-catalog') subSegment = 'merchants';
-    else if (subTab === 'pricing-catalog') subSegment = 'pricing';
+    const resolvedSubPath = 
+      subTab === 'ads-catalog' ? 'ads' : 
+      subTab === 'merchants-catalog' ? 'merchants' : 
+      subTab === 'pricing-catalog' ? 'pricing' : 
+      subTab;
     
-    let path = '/dashboard';
-    if (subSegment !== 'overview') {
-      path = `/dashboard/${subSegment}`;
-    }
-    if (window.location.pathname !== path) {
-      window.history.pushState(null, '', path);
+    if (resolvedSubPath === 'overview') {
+      navigateReactRouter('/dashboard');
+    } else {
+      navigateReactRouter(`/dashboard/${resolvedSubPath}`);
     }
   };
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
@@ -202,26 +232,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setIsLoginModalOpen(true);
       return;
     }
-    if (tab === 'pasang-iklan-gratis' && !isLoggedIn && !forceAccess) {
+    if ((tab === 'pasang-iklan-gratis' || tab === 'buat-iklan-gratis') && !isLoggedIn && !forceAccess) {
       addNotification('Silakan login terlebih dahulu untuk memasang iklan gratis.', 'warning');
       setPendingPostAd(true);
       setIsLoginModalOpen(true);
       return;
     }
 
-    let subTabName = '';
-    if (tab === 'marketplace' || tab === 'ads' || tab === 'merchants' || tab === 'pricing') {
-      setActiveTab('dashboard');
-      const resolvedSubTab = 
-        tab === 'ads' ? 'ads-catalog' : 
-        tab === 'merchants' ? 'merchants-catalog' : 
-        tab === 'pricing' ? 'pricing-catalog' : 
-        tab;
-      setDashboardSubTabState(resolvedSubTab);
-      subTabName = tab;
-    } else {
-      setActiveTab(tab);
-    }
     if (params) {
       if (params.productId) setSelectedProductId(params.productId);
       if (params.merchantId) setSelectedMerchantId(params.merchantId);
@@ -230,67 +247,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     let path = '/';
-    if (['iklan-gratis', 'pasang-iklan-gratis', 'upload-produk', 'daftar-merchant', 'bantuan'].includes(tab)) {
+    if (['iklan-gratis', 'pasang-iklan-gratis', 'buat-iklan-gratis', 'upload-produk', 'daftar-merchant', 'bantuan'].includes(tab)) {
       path = `/${tab}`;
     } else if (tab === 'dashboard') {
       path = '/dashboard';
-    } else if (subTabName) {
-      path = `/dashboard/${subTabName}`;
-    }
-    if (window.location.pathname !== path) {
-      window.history.pushState(null, '', path);
+    } else if (['marketplace', 'ads', 'merchants', 'pricing'].includes(tab)) {
+      path = `/dashboard/${tab}`;
     }
 
+    navigateReactRouter(path);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   React.useEffect(() => {
-    const handlePopState = () => {
-      const path = window.location.pathname;
-      if (path === '/' || path === '/home') {
-        setActiveTab('home');
-      } else if (path === '/iklan-gratis') {
-        setActiveTab('iklan-gratis');
-      } else if (path === '/pasang-iklan-gratis') {
-        if (!isLoggedIn) {
-          setActiveTab('home');
-          window.history.replaceState(null, '', '/');
-          setIsLoginModalOpen(true);
-          setPendingPostAd(true);
-          addNotification('Silakan login terlebih dahulu untuk memasang iklan gratis.', 'warning');
-        } else {
-          setActiveTab('pasang-iklan-gratis');
-        }
-      } else if (path === '/upload-produk') {
-        setActiveTab('upload-produk');
-      } else if (path === '/daftar-merchant') {
-        setActiveTab('daftar-merchant');
-      } else if (path === '/bantuan') {
-        setActiveTab('bantuan');
-      } else if (path.startsWith('/dashboard')) {
-        setActiveTab('dashboard');
-        const segments = path.split('/');
-        if (segments[2]) {
-          const sub = segments[2];
-          setDashboardSubTabState(
-            sub === 'ads' ? 'ads-catalog' : 
-            sub === 'merchants' ? 'merchants-catalog' : 
-            sub === 'pricing' ? 'pricing-catalog' : 
-            sub
-          );
-        } else {
-          setDashboardSubTabState('overview');
-        }
-      }
-    };
-
-    window.addEventListener('popstate', handlePopState);
-    handlePopState();
-
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-    };
-  }, [isLoggedIn]);
+    if ((location.pathname === '/pasang-iklan-gratis' || location.pathname === '/buat-iklan-gratis') && !isLoggedIn) {
+      navigateReactRouter('/');
+      setIsLoginModalOpen(true);
+      setPendingPostAd(true);
+      addNotification('Silakan login terlebih dahulu untuk memasang iklan gratis.', 'warning');
+    }
+    const isDashboardAccess = location.pathname.startsWith('/dashboard');
+    if (isDashboardAccess && !isLoggedIn) {
+      navigateReactRouter('/');
+      setIsLoginModalOpen(true);
+      addNotification('Silakan masuk (login) terlebih dahulu untuk mengakses area Dashboard.', 'warning');
+    }
+  }, [location.pathname, isLoggedIn]);
 
   const addToCart = (product: Product) => {
     setCart((prev) => {

@@ -1,4 +1,5 @@
 import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider, useApp } from './context/AppContext';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
@@ -58,28 +59,33 @@ const MainContent: React.FC = () => {
       <Navbar />
 
       <main className="flex-1">
-        {activeTab === 'home' && (
-          <div className="space-y-4">
-            <HeroSection />
-            <ScrollReveal><CategorySection /></ScrollReveal>
-            <ScrollReveal><FeaturedProducts /></ScrollReveal>
-            <ScrollReveal><AdvertisingSection /></ScrollReveal>
-            <ScrollReveal><PopularProducts /></ScrollReveal>
-            <ScrollReveal><FeaturedMerchants /></ScrollReveal>
-            <ScrollReveal><HowItWorksSection /></ScrollReveal>
-            <ScrollReveal><BenefitsSection /></ScrollReveal>
-            <ScrollReveal><TestimonialsSection /></ScrollReveal>
-            <ScrollReveal><FaqSection /></ScrollReveal>
-            <ScrollReveal variant="zoom-in"><CtaBanner /></ScrollReveal>
-          </div>
-        )}
-
-        {activeTab === 'iklan-gratis' && <ClassifiedsCatalogView />}
-        {activeTab === 'pasang-iklan-gratis' && <PostFreeAdView />}
-        {activeTab === 'upload-produk' && <UploadProductView />}
-        {activeTab === 'daftar-merchant' && <MerchantRegistrationView />}
-        {activeTab === 'bantuan' && <HelpView />}
-        {activeTab === 'dashboard' && <DashboardView />}
+        <Routes>
+          <Route path="/" element={
+            <div className="space-y-4">
+              <HeroSection />
+              <ScrollReveal><CategorySection /></ScrollReveal>
+              <ScrollReveal><FeaturedProducts /></ScrollReveal>
+              <ScrollReveal><AdvertisingSection /></ScrollReveal>
+              <ScrollReveal><PopularProducts /></ScrollReveal>
+              <ScrollReveal><FeaturedMerchants /></ScrollReveal>
+              <ScrollReveal><HowItWorksSection /></ScrollReveal>
+              <ScrollReveal><BenefitsSection /></ScrollReveal>
+              <ScrollReveal><TestimonialsSection /></ScrollReveal>
+              <ScrollReveal><FaqSection /></ScrollReveal>
+              <ScrollReveal variant="zoom-in"><CtaBanner /></ScrollReveal>
+            </div>
+          } />
+          <Route path="/home" element={<Navigate to="/" replace />} />
+          <Route path="/iklan-gratis" element={<ClassifiedsCatalogView />} />
+          <Route path="/pasang-iklan-gratis" element={<PostFreeAdView mode="landing" />} />
+          <Route path="/buat-iklan-gratis" element={<PostFreeAdView mode="wizard" />} />
+          <Route path="/upload-produk" element={<UploadProductView />} />
+          <Route path="/daftar-merchant" element={<MerchantRegistrationView />} />
+          <Route path="/bantuan" element={<HelpView />} />
+          <Route path="/dashboard" element={<DashboardView />} />
+          <Route path="/dashboard/*" element={<DashboardView />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       </main>
 
       <Footer />
@@ -98,9 +104,11 @@ const MainContent: React.FC = () => {
 export default function App() {
   return (
     <ErrorBoundary>
-      <AppProvider>
-        <MainContent />
-      </AppProvider>
+      <BrowserRouter>
+        <AppProvider>
+          <MainContent />
+        </AppProvider>
+      </BrowserRouter>
     </ErrorBoundary>
   );
 }

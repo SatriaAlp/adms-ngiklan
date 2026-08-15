@@ -4,11 +4,16 @@ import {
   X, Megaphone, Sparkles, CheckCircle2, Image as ImageIcon, 
   ArrowLeft, ArrowRight, ShieldCheck, CreditCard, Zap, 
   MapPin, Phone, Mail, User, Info, FileText, Check, ArrowLeftCircle,
-  Car, Smartphone, Home, Briefcase, Tv, Heart, PlusCircle
+  Car, Smartphone, Home, Briefcase, Tv, Heart, PlusCircle,
+  BookOpen, Calendar, Clock
 } from 'lucide-react';
 import { UserRole } from '../../types';
 
-export const PostFreeAdView: React.FC = () => {
+interface PostFreeAdViewProps {
+  mode?: 'landing' | 'wizard';
+}
+
+export const PostFreeAdView: React.FC<PostFreeAdViewProps> = ({ mode = 'landing' }) => {
   const { 
     createAd, 
     categories, 
@@ -22,9 +27,6 @@ export const PostFreeAdView: React.FC = () => {
     navigate,
     ads
   } = useApp();
-
-  // Landing page state
-  const [showLanding, setShowLanding] = useState<boolean>(true);
 
   // Multi-step state
   const [step, setStep] = useState<number>(1);
@@ -191,7 +193,7 @@ export const PostFreeAdView: React.FC = () => {
     addNotification('Iklan berhasil dikirim dan siap ditinjau oleh Admin!', 'success');
   };
 
-  if (showLanding) {
+  if (mode === 'landing') {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12 animate-fade-in">
         {/* Hero Section */}
@@ -215,7 +217,7 @@ export const PostFreeAdView: React.FC = () => {
 
             <div className="pt-2">
               <button
-                onClick={() => setShowLanding(false)}
+                onClick={() => navigate('buat-iklan-gratis')}
                 className="w-full sm:w-auto bg-gold hover:bg-gold/90 text-navy font-bold text-sm sm:text-base px-8 py-3.5 rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all active:scale-[0.98] cursor-pointer"
               >
                 <PlusCircle className="w-5 h-5 text-navy" />
@@ -252,7 +254,7 @@ export const PostFreeAdView: React.FC = () => {
                 key={idx}
                 onClick={() => {
                   setCategory(cat.name === 'Elektronik' || cat.name === 'Rumah Tangga' || cat.name === 'Hobi' ? 'Handphone' : cat.name);
-                  setShowLanding(false);
+                  navigate('buat-iklan-gratis');
                 }}
                 className={`flex flex-col items-center justify-center p-4 rounded-2xl border text-center transition-all duration-300 group cursor-pointer ${cat.color}`}
               >
@@ -364,6 +366,77 @@ export const PostFreeAdView: React.FC = () => {
             </div>
           )}
         </div>
+
+        {/* Blog / Tips Section */}
+        <div className="space-y-4 pt-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-3">
+            <div>
+              <h3 className="font-extrabold text-lg text-slate-900">Tips & Panduan Beriklan Efektif</h3>
+              <p className="text-xs text-slate-500 font-medium">Pelajari cara memaksimalkan promosi produk dan jasa Anda agar cepat laku.</p>
+            </div>
+            <span className="text-[10px] bg-slate-100 text-slate-500 font-bold px-2 py-0.5 rounded uppercase tracking-wider shrink-0 w-fit">
+              Classifieds Blog
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              {
+                category: 'Tips Penjualan',
+                title: '5 Cara Menulis Judul Iklan yang Memikat Pembeli',
+                excerpt: "Judul iklan adalah hal pertama yang dilihat calon pembeli. Gunakan formula 'Kata Kerja + Nama Produk + Kelebihan + Harga Coret' untuk hasil maksimal.",
+                date: '12 Agustus 2026',
+                readTime: '3 min read',
+                image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&auto=format&fit=crop&q=80',
+              },
+              {
+                category: 'Strategi Promosi',
+                title: 'Pentingnya Foto Produk Berkualitas Tinggi untuk Iklan Anda',
+                excerpt: 'Iklan dengan foto produk asli dan tajam mendapatkan klik 80% lebih banyak. Simak tips pencahayaan sederhana menggunakan smartphone Anda.',
+                date: '10 Agustus 2026',
+                readTime: '4 min read',
+                image: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=600&auto=format&fit=crop&q=80',
+              },
+              {
+                category: 'Keamanan',
+                title: 'Panduan Jual Beli Aman: Hindari Upaya Penipuan Online',
+                excerpt: 'Selalu gunakan fitur WhatsApp resmi, jangan berikan kode OTP, dan pastikan transaksi pembayaran menggunakan payment gateway resmi ADMS.',
+                date: '08 Agustus 2026',
+                readTime: '5 min read',
+                image: 'https://images.unsplash.com/photo-1557200134-90327ee9fafa?w=600&auto=format&fit=crop&q=80',
+              }
+            ].map((post, idx) => (
+              <div key={idx} className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between">
+                <div>
+                  <div className="h-44 overflow-hidden relative bg-slate-100">
+                    <img src={post.image} alt={post.title} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
+                    <span className="absolute top-3 left-3 px-2 py-0.5 rounded bg-navy text-gold font-bold text-[9px] uppercase tracking-wider">
+                      {post.category}
+                    </span>
+                  </div>
+                  <div className="p-5 space-y-2">
+                    <h4 className="font-extrabold text-sm text-slate-900 hover:text-cyan-600 transition-colors cursor-pointer leading-snug line-clamp-2">
+                      {post.title}
+                    </h4>
+                    <p className="text-xs text-slate-500 leading-relaxed font-normal line-clamp-3">
+                      {post.excerpt}
+                    </p>
+                  </div>
+                </div>
+                <div className="px-5 py-3.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400 font-semibold mt-auto">
+                  <div className="flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                    <span>{post.date}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-slate-400" />
+                    <span>{post.readTime}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -373,11 +446,11 @@ export const PostFreeAdView: React.FC = () => {
       {/* Upper Back Bar */}
       <div className="flex items-center justify-between">
         <button
-          onClick={() => setShowLanding(true)}
+          onClick={() => navigate('home')}
           className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
         >
           <ArrowLeftCircle className="w-5 h-5 text-slate-500" />
-          <span>Kembali ke Halaman Pemasangan</span>
+          <span>Kembali ke Beranda</span>
         </button>
 
         <div className="text-right">
