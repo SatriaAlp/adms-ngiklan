@@ -165,6 +165,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           merchantId: bp.merchant?.id || '',
           merchantName: bp.merchant?.name || '',
           merchantLogo: bp.merchant?.logo || '',
+          priceType: bp.priceType || 'FIXED',
           price: Number(bp.price) || 0,
           discountPrice: bp.discountPrice ? Number(bp.discountPrice) : undefined,
           rating: 0,
@@ -177,6 +178,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           features: ['Lisensi Penggunaan', 'Akses Seumur Hidup'],
           specifications: { Format: 'ZIP / PDF' },
           status: bp.status === 'ACTIVE' || bp.status === 'APPROVED' ? 'published' : 'pending',
+          packages: bp.packages ? bp.packages.map((pkg: any) => ({
+            id: pkg.id,
+            name: pkg.name,
+            price: Number(pkg.price) || 0,
+            description: pkg.description,
+            features: pkg.features ? JSON.parse(pkg.features) : [],
+            deliveryTime: pkg.deliveryTime
+          })) : [],
           createdAt: bp.createdAt
         }));
         setProducts(mappedProducts);

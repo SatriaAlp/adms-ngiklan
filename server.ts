@@ -1,15 +1,17 @@
-import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
-import { GoogleGenAI } from "@google/genai";
+import express from "express";
+import { app } from "./server/app";
+
 import { PrismaClient } from "@prisma/client";
+import { GoogleGenAI } from "@google/genai";
 
 const prisma = new PrismaClient();
+const PORT = 3000;
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
-
+  
   app.use(express.json());
 
   // Initialize Gemini AI Client for Server-Side Chatbot
@@ -757,6 +759,8 @@ LINK AKSES ASSET DIGITAL & INSTRUKSI:
 Layanan Bantuan ADMS Support:
 WhatsApp: +62 812-3456-7890
 Email: support@armadadigitalmarketing.top
+`);
+  });
 
   // ==========================================
   // PUBLIC API - FOR CUSTOMER / MARKETPLACE
@@ -779,12 +783,28 @@ Email: support@armadadigitalmarketing.top
 
       const products = await prisma.product.findMany({
         where: whereClause,
-        include: { merchant: true, category: true },
+        include: { merchant: true, category: true, packages: true },
         orderBy: { createdAt: 'desc' },
       });
       res.json(products);
     } catch (error) {
       console.error('Error fetching public products:', error);
+      res.status(500).json({ error: "Gagal mengambil data produk" });
+    }
+  });
+
+  app.get("/api/public/products/:slug", async (req, res) => {
+    try {
+      const { slug } = req.params;
+      const product = await prisma.product.findUnique({
+        where: { slug },
+        include: { merchant: true, category: true, packages: true },
+      });
+      
+      if (!product) return res.status(404).json({ error: "Produk tidak ditemukan" });
+      res.json(product);
+    } catch (error) {
+      console.error('Error fetching single public product:', error);
       res.status(500).json({ error: "Gagal mengambil data produk" });
     }
   });
@@ -866,9 +886,6 @@ Email: support@armadadigitalmarketing.top
       console.error('Error creating product:', error);
       res.status(500).json({ error: "Gagal membuat produk" });
     }
-  });
-
-=======================================================`);
   });
 
   // AI Assistant Chatbot API Endpoint (Gemini-Powered)

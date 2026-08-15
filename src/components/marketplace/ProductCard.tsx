@@ -127,35 +127,46 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetail 
           </button>
 
           {/* Pricing */}
-          <div className="flex items-baseline justify-between pt-0.5">
-            <div className="flex items-baseline gap-1.5">
-              <span className="font-black text-sm sm:text-base text-slate-900">
-                {formatRupiah(product.discountPrice || product.price)}
-              </span>
-              {product.discountPrice && (
-                <span className="text-xs text-slate-400 line-through font-normal">
-                  {formatRupiah(product.price)}
-                </span>
-              )}
-            </div>
+          <div className="flex flex-col pt-0.5">
+            {product.priceType === 'CONTACT_US' ? (
+              <span className="font-black text-sm sm:text-base text-rose-600">Hubungi Kami</span>
+            ) : (
+              <>
+                {product.priceType === 'STARTING_FROM' && (
+                  <span className="text-[10px] font-medium text-slate-500 mb-0.5">Mulai dari</span>
+                )}
+                <div className="flex items-baseline gap-1.5">
+                  <span className="font-black text-sm sm:text-base text-slate-900">
+                    {formatRupiah(product.discountPrice || product.price)}
+                  </span>
+                  {product.discountPrice && (
+                    <span className="text-xs text-slate-400 line-through font-normal">
+                      {formatRupiah(product.price)}
+                    </span>
+                  )}
+                </div>
+              </>
+            )}
           </div>
 
           {/* Action Buttons */}
           <div className="grid grid-cols-2 gap-2 pt-1">
             <button
               type="button"
-              onClick={handleAddToCart}
-              className="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs py-2 px-2 rounded-lg flex items-center justify-center gap-1 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onOpenDetail) onOpenDetail(product);
+              }}
+              className="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs py-2 px-2 rounded-lg flex items-center justify-center transition-colors"
             >
-              <ShoppingBag className="w-3.5 h-3.5 text-slate-600" />
-              Keranjang
+              Lihat Detail
             </button>
             <button
               type="button"
               onClick={handleBuyNow}
-              className="w-full bg-navy hover:bg-navy/90 text-white font-bold text-xs py-2 px-2 rounded-lg flex items-center justify-center gap-1 transition-colors shadow-xs"
+              className="w-full bg-navy hover:bg-navy/90 text-white font-bold text-xs py-2 px-2 rounded-lg flex items-center justify-center transition-colors shadow-xs"
             >
-              Beli Sekarang
+              Pesan Sekarang
             </button>
           </div>
         </div>
