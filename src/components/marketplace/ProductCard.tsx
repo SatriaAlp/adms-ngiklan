@@ -95,17 +95,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetail 
       <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
         <div>
           {/* Title */}
-          <h3 className="font-bold text-slate-900 text-xs sm:text-sm line-clamp-2 leading-snug group-hover:text-gold transition-colors">
+          <h3 className="font-bold text-slate-900 text-xs sm:text-sm line-clamp-2 leading-snug group-hover:text-navy transition-colors min-h-[36px] sm:min-h-[40px]">
             {product.title}
           </h3>
 
           {/* Short Description */}
-          <p className="text-slate-500 text-xs line-clamp-2 mt-1 leading-relaxed font-normal">
+          <p className="text-slate-500 text-xs line-clamp-2 mt-1 leading-relaxed font-normal min-h-[32px] sm:min-h-[36px]">
             {product.shortDescription}
           </p>
         </div>
 
-        <div className="space-y-2.5 pt-2 border-t border-slate-100">
+        <div className="space-y-2.5 pt-2 border-t border-slate-100 mt-auto">
           {/* Rating & Terjual */}
           <div className="flex items-center justify-between text-xs text-slate-500">
             <div className="flex items-center gap-1 font-bold text-amber-500">
@@ -127,13 +127,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenDetail 
           </button>
 
           {/* Pricing */}
-          <div className="flex flex-col pt-0.5">
+          <div className="flex flex-col pt-0.5 min-h-[42px] justify-end">
             {product.priceType === 'CONTACT_US' ? (
               <span className="font-black text-sm sm:text-base text-rose-600">Hubungi Kami</span>
             ) : (
               <>
-                {product.priceType === 'STARTING_FROM' && (
-                  <span className="text-[10px] font-medium text-slate-500 mb-0.5">Mulai dari</span>
+                {product.priceType === 'STARTING_FROM' ? (
+                  <span className="text-[10px] font-medium text-slate-500 mb-0.5 leading-none">Mulai dari</span>
+                ) : (
+                  <span className="text-[10px] font-medium text-transparent mb-0.5 leading-none select-none hidden sm:block">&nbsp;</span>
                 )}
                 <div className="flex items-baseline gap-1.5">
                   <span className="font-black text-sm sm:text-base text-slate-900">
