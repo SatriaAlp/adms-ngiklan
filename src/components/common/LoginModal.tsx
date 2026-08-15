@@ -79,10 +79,7 @@ export const LoginModal: React.FC = () => {
     }
 
     if (pendingPostAd) {
-      navigate('dashboard');
-      setTimeout(() => {
-        setIsCreateAdModalOpen(true);
-      }, 300);
+      navigate('pasang-iklan-gratis');
       setPendingPostAd(false);
     }
   };
