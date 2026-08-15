@@ -1,0 +1,166 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(uuid())
+  name          String
+  email         String    @unique
+  phone         String?
+  passwordHash  String
+  avatar        String?
+  role          Role      @default(USER)
+  status        Status    @default(ACTIVE)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastLogin     DateTime?
+
+  merchants     Merchant[]
+  orders        Order[]
+  reviews       Review[]
+}
+
+enum Role {
+  USER
+  MERCHANT
+  ADMIN
+  SUPER_ADMIN
+  MODERATOR
+}
+
+enum Status {
+  ACTIVE
+  SUSPENDED
+  BANNED
+  PENDING
+}
+
+model Merchant {
+  id              String    @id @default(uuid())
+  ownerId         String
+  name            String
+  slug            String    @unique
+  logo            String?
+  banner          String?
+  description     String?   @db.Text
+  verificationStatus VerificationStatus @default(PENDING)
+  location        String?
+  contactWhatsapp String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  owner           User      @relation(fields: [ownerId], references: [id])
+  products        Product[]
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+  SUSPENDED
+}
+
+model Product {
+  id              String    @id @default(uuid())
+  merchantId      String
+  title           String
+  slug            String    @unique
+  categoryId      String
+  price           Decimal   @db.Decimal(10, 2)
+  discountPrice   Decimal?  @db.Decimal(10, 2)
+  thumbnail       String?
+  shortDescription String   @db.Text
+  fullDescription String    @db.Text
+  status          ProductStatus @default(DRAFT)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  merchant        Merchant  @relation(fields: [merchantId], references: [id])
+  category        Category  @relation(fields: [categoryId], references: [id])
+  orderItems      OrderItem[]
+  reviews         Review[]
+}
+
+enum ProductStatus {
+  DRAFT
+  PENDING_REVIEW
+  APPROVED
+  ACTIVE
+  INACTIVE
+  REJECTED
+  SUSPENDED
+}
+
+model Category {
+  id              String    @id @default(uuid())
+  name            String
+  slug            String    @unique
+  iconName        String?
+  description     String?
+  products        Product[]
+}
+
+model Order {
+  id              String    @id @default(uuid())
+  customerId      String
+  subtotal        Decimal   @db.Decimal(10, 2)
+  discount        Decimal   @db.Decimal(10, 2) @default(0)
+  platformFee     Decimal   @db.Decimal(10, 2)
+  totalAmount     Decimal   @db.Decimal(10, 2)
+  paymentMethod   String
+  paymentStatus   PaymentStatus @default(PENDING)
+  transactionType String
+  createdAt       DateTime  @default(now())
+  paidAt          DateTime?
+
+  customer        User      @relation(fields: [customerId], references: [id])
+  items           OrderItem[]
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  PAID
+  FAILED
+  EXPIRED
+  REFUNDED
+}
+
+model OrderItem {
+  id              String    @id @default(uuid())
+  orderId         String
+  productId       String
+  price           Decimal   @db.Decimal(10, 2)
+  quantity        Int
+  downloadUrl     String?
+
+  order           Order     @relation(fields: [orderId], references: [id])
+  product         Product   @relation(fields: [productId], references: [id])
+}
+
+model Review {
+  id              String    @id @default(uuid())
+  productId       String
+  userId          String
+  rating          Int
+  comment         String    @db.Text
+  createdAt       DateTime  @default(now())
+
+  product         Product   @relation(fields: [productId], references: [id])
+  user            User      @relation(fields: [userId], references: [id])
+}
+
+model SystemSetting {
+  id              String    @id @default(uuid())
+  key             String    @unique
+  value           String    @db.Text
+  updatedAt       DateTime  @updatedAt
+}
