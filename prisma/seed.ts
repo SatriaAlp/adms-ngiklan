@@ -40,6 +40,15 @@ async function main() {
         passwordHash: 'hashedpassword',
         role: 'USER',
         status: 'SUSPENDED',
+      },
+      {
+        id: 'usr-1005',
+        name: 'Super Admin Kedua',
+        email: 'superadmin2@gmail.com',
+        phone: '081234567891',
+        passwordHash: 'hashedpassword',
+        role: 'ADMIN',
+        status: 'ACTIVE',
       }
     ],
     skipDuplicates: true

@@ -120,7 +120,10 @@ async function startServer() {
       
       const updatedMerchant = await prisma.merchant.update({
         where: { id },
-        data: { verificationStatus: status }
+        data: { 
+          verificationStatus: status,
+          verificationNotes: notes || null
+        }
       });
       
       // If approved, update user role to MERCHANT
@@ -769,32 +772,42 @@ Email: support@armadadigitalmarketing.top
 
   app.get("/api/public/ads", async (req, res) => {
     try {
-      const ads = await prisma.$queryRawUnsafe<any[]>('SELECT * FROM `Advertisement` ORDER BY `createdAt` DESC');
+      const ads = await prisma.advertisement.findMany({
+        include: {
+          category: true,
+          package: true,
+          merchant: true,
+          owner: true
+        },
+        orderBy: {
+          createdAt: 'desc'
+        }
+      });
       
       const mappedAds = ads.map(ad => ({
         id: ad.id,
         title: ad.title,
-        category: ad.category,
+        category: ad.category.slug,
         subcategory: ad.subcategory || undefined,
         description: ad.description,
         price: Number(ad.price) || 0,
-        images: ad.images ? JSON.parse(ad.images) : [],
+        images: [], // Maintained for client structure
         location: ad.location,
         contactName: ad.contactName,
         whatsapp: ad.whatsapp,
         websiteUrl: ad.websiteUrl || undefined,
-        condition: ad.condition,
+        condition: ad.condition.toLowerCase(),
         tags: ad.tags ? ad.tags.split(',') : [],
         durationDays: Number(ad.durationDays) || 7,
         type: ad.type,
-        status: ad.status,
+        status: ad.status.toLowerCase(),
         merchantId: ad.merchantId || undefined,
         ownerId: ad.ownerId || undefined,
         viewsCount: Number(ad.viewsCount) || 0,
         clicksCount: Number(ad.clicksCount) || 0,
         createdAt: ad.createdAt,
         expiresAt: ad.expiresAt,
-        packageName: ad.packageName || undefined
+        packageName: ad.package?.name || undefined
       }));
       res.json(mappedAds);
     } catch (error) {
@@ -808,32 +821,89 @@ Email: support@armadadigitalmarketing.top
       const ad = req.body;
       const id = ad.id || `ad-${Date.now()}`;
       const title = ad.title || 'Iklan Promosi Baru';
-      const category = ad.category || 'jasa';
+      const categorySlug = ad.category || 'jasa';
       const subcategory = ad.subcategory || null;
       const description = ad.description || '';
       const price = ad.price || 0;
-      const images = JSON.stringify(ad.images || []);
       const location = ad.location || 'Indonesia';
       const contactName = ad.contactName || 'Pengiklan';
       const whatsapp = ad.whatsapp || '';
       const websiteUrl = ad.websiteUrl || null;
-      const condition = ad.condition || 'bekas';
+      const condition = (ad.condition && ad.condition.toUpperCase() === 'BARU') ? 'BARU' : 'BEKAS';
       const tags = (ad.tags || []).join(',');
       const durationDays = ad.durationDays || 7;
       const type = ad.type || 'free';
-      const status = ad.status || 'pending';
+      const status = 'PENDING';
       const merchantId = ad.merchantId || null;
-      const ownerId = ad.ownerId || null;
+      const ownerId = ad.ownerId || 'usr-1001';
       const viewsCount = ad.viewsCount || 0;
       const clicksCount = ad.clicksCount || 0;
-      const createdAt = new Date().toISOString();
-      const expiresAt = new Date(Date.now() + durationDays * 86400000).toISOString();
-      const packageName = ad.packageName || 'Iklan Gratis';
+      const expiresAt = new Date(Date.now() + durationDays * 86400000);
 
-      await prisma.$executeRawUnsafe(
-        'INSERT INTO `Advertisement` (`id`, `title`, `category`, `subcategory`, `description`, `price`, `images`, `location`, `contactName`, `whatsapp`, `websiteUrl`, `condition`, `tags`, `durationDays`, `type`, `status`, `merchantId`, `ownerId`, `viewsCount`, `clicksCount`, `createdAt`, `expiresAt`, `packageName`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-        id, title, category, subcategory, description, price, images, location, contactName, whatsapp, websiteUrl, condition, tags, durationDays, type, status, merchantId, ownerId, viewsCount, clicksCount, createdAt, expiresAt, packageName
-      );
+      // Find or create category matching the slug
+      let categoryObj = await prisma.category.findUnique({ where: { slug: categorySlug } });
+      if (!categoryObj) {
+        categoryObj = await prisma.category.create({
+          data: {
+            name: categorySlug.charAt(0).toUpperCase() + categorySlug.slice(1),
+            slug: categorySlug,
+            type: 'ADVERTISEMENT'
+          }
+        });
+      }
+
+      // Find or create package matching type/duration
+      let packageObj = await prisma.package.findFirst({ where: { name: ad.packageName || 'Iklan Gratis' } });
+      if (!packageObj) {
+        packageObj = await prisma.package.create({
+          data: {
+            name: ad.packageName || 'Iklan Gratis',
+            price: type === 'free' ? 0 : 50000,
+            durationDays: durationDays,
+            type: type === 'free' ? 'FREE' : 'PREMIUM',
+            isActive: true
+          }
+        });
+      }
+
+      const newAd = await prisma.advertisement.create({
+        data: {
+          id,
+          title,
+          categoryId: categoryObj.id,
+          subcategory,
+          description,
+          price,
+          location,
+          contactName,
+          whatsapp,
+          websiteUrl,
+          condition: condition as any,
+          tags,
+          durationDays,
+          packageId: packageObj.id,
+          status: status as any,
+          merchantId,
+          ownerId,
+          viewsCount,
+          clicksCount,
+          expiresAt
+        }
+      });
+
+      // Handle media creation if images exist
+      if (ad.images && Array.isArray(ad.images)) {
+        for (const imageUrl of ad.images) {
+          await prisma.media.create({
+            data: {
+              url: imageUrl,
+              type: 'AD_IMAGE',
+              ownerId: newAd.id,
+              ownerType: 'ADVERTISEMENT'
+            }
+          });
+        }
+      }
 
       res.status(201).json({ success: true, id });
     } catch (error) {
@@ -881,10 +951,135 @@ Email: support@armadadigitalmarketing.top
         return res.status(401).json({ error: "Email atau Password salah!" });
       }
 
+      if (user.status === 'SUSPENDED') {
+        return res.status(403).json({ error: "Akun Anda ditangguhkan oleh Administrator!" });
+      }
+
       res.json({ success: true, user });
     } catch (error) {
       console.error("Login gagal:", error);
       res.status(500).json({ error: "Gagal memproses login" });
+    }
+  });
+
+  app.post("/api/auth/forgot-password", async (req, res) => {
+    try {
+      const { email } = req.body;
+      const user = await prisma.user.findUnique({ where: { email } });
+      if (!user) {
+        return res.status(404).json({ error: "Email tidak terdaftar!" });
+      }
+
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+
+      await prisma.authToken.create({
+        data: {
+          userId: user.id,
+          token: otp,
+          type: 'RESET_PASSWORD',
+          expiresAt
+        }
+      });
+
+      console.log(`[OTP RESET PASSWORD] Sent OTP ${otp} to ${email}`);
+      res.json({ success: true, message: "OTP pemulihan berhasil dikirim!" });
+    } catch (error) {
+      console.error("Forgot password error:", error);
+      res.status(500).json({ error: "Gagal memproses pemulihan password" });
+    }
+  });
+
+  app.post("/api/auth/reset-password", async (req, res) => {
+    try {
+      const { email, otp, password } = req.body;
+      const user = await prisma.user.findUnique({ where: { email } });
+      if (!user) {
+        return res.status(404).json({ error: "Pengguna tidak ditemukan!" });
+      }
+
+      const validToken = await prisma.authToken.findFirst({
+        where: {
+          userId: user.id,
+          token: otp,
+          type: 'RESET_PASSWORD',
+          expiresAt: { gte: new Date() }
+        }
+      });
+
+      if (!validToken) {
+        return res.status(400).json({ error: "Kode OTP salah atau telah kedaluwarsa!" });
+      }
+
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { passwordHash: password }
+      });
+
+      await prisma.authToken.delete({ where: { id: validToken.id } });
+
+      res.json({ success: true, message: "Password baru berhasil disimpan!" });
+    } catch (error) {
+      console.error("Reset password error:", error);
+      res.status(500).json({ error: "Gagal memproses reset password" });
+    }
+  });
+
+  app.post("/api/admin/users/:id/suspend", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { reason, adminId } = req.body;
+
+      const updatedUser = await prisma.user.update({
+        where: { id },
+        data: { status: 'SUSPENDED' }
+      });
+
+      if (adminId) {
+        await prisma.adminAuditLog.create({
+          data: {
+            adminId,
+            action: 'SUSPEND_USER',
+            targetType: 'USER',
+            targetId: id,
+            reason: reason || 'Suspended by Administrator'
+          }
+        });
+      }
+
+      res.json({ success: true, message: "Pengguna berhasil ditangguhkan!", user: updatedUser });
+    } catch (error) {
+      console.error("Suspend user error:", error);
+      res.status(500).json({ error: "Gagal menangguhkan pengguna" });
+    }
+  });
+
+  app.post("/api/admin/users/:id/activate", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { adminId } = req.body;
+
+      const updatedUser = await prisma.user.update({
+        where: { id },
+        data: { status: 'ACTIVE' }
+      });
+
+      if (adminId) {
+        await prisma.adminAuditLog.create({
+          data: {
+            adminId,
+            action: 'ACTIVATE_USER',
+            targetType: 'USER',
+            targetId: id,
+            reason: 'Reactivated by Administrator'
+          }
+        });
+      }
+
+      res.json({ success: true, message: "Pengguna berhasil diaktifkan kembali!", user: updatedUser });
+    } catch (error) {
+      console.error("Activate user error:", error);
+      res.status(500).json({ error: "Gagal mengaktifkan kembali pengguna" });
     }
   });
 
@@ -937,7 +1132,7 @@ Email: support@armadadigitalmarketing.top
 
   app.post("/api/public/merchants", async (req, res) => {
     try {
-      const { fullName, email, whatsapp, storeName, storeUsername, description, address, ownerId } = req.body;
+      const { fullName, email, whatsapp, storeName, storeUsername, description, address, ownerId, syariahCertified, syariahCertNumber, syariahCertBody } = req.body;
       
       // Check if user exists by email, if not create dummy user (in real app, this is handled by Auth)
       let user = null;
@@ -969,14 +1164,26 @@ Email: support@armadadigitalmarketing.top
           description: description,
           contactWhatsapp: whatsapp,
           location: address,
-          verificationStatus: 'PENDING'
+          verificationStatus: 'PENDING',
+          syariahCertified: syariahCertified || false,
+          syariahCertNumber: syariahCertNumber || null,
+          syariahCertBody: syariahCertBody || null
         }
       });
       
       res.json(merchant);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error registering merchant:', error);
-      res.status(500).json({ error: "Gagal mendaftar merchant" });
+      if (error.code === 'P2002') {
+        const target = String(error.meta?.target || '');
+        if (target.includes('slug')) {
+          return res.status(400).json({ error: "Username/Slug Toko sudah terdaftar." });
+        }
+        if (target.includes('email')) {
+          return res.status(400).json({ error: "Email sudah terdaftar." });
+        }
+      }
+      res.status(500).json({ error: "Gagal mendaftar merchant: " + (error.message || "kesalahan internal") });
     }
   });
 

@@ -337,6 +337,20 @@ class ApiClient {
     });
   }
 
+  async forgotPassword(data: any) {
+    return this.request<any>('/api/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async resetPassword(data: any) {
+    return this.request<any>('/api/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
 }
 
 export const api = new ApiClient();
