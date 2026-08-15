@@ -5,7 +5,7 @@ import { Store, ShieldCheck, Star, Package, Search, ExternalLink, ArrowRight, Ch
 export const MerchantsView: React.FC = () => {
   const { 
     merchants, products, navigate, activeRole, setActiveRole, 
-    addNotification, setDashboardSubTab, currentUser 
+    addNotification, setDashboardSubTab, currentUser, setIsLoggedIn 
   } = useApp();
   const [search, setSearch] = useState('');
 
@@ -35,6 +35,7 @@ export const MerchantsView: React.FC = () => {
           currentUser.merchantId ? (
             <button
               onClick={() => {
+                setIsLoggedIn(true);
                 setActiveRole('MERCHANT');
                 navigate('dashboard');
                 setDashboardSubTab('overview');

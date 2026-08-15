@@ -41,6 +41,7 @@ export const DashboardView: React.FC = () => {
     activeRole,
     setActiveRole,
     currentUser,
+    setIsLoggedIn,
     orders,
     products,
     ads,
@@ -222,6 +223,7 @@ export const DashboardView: React.FC = () => {
           {activeRole === 'USER' && currentUser.merchantId && (
             <button
               onClick={() => {
+                setIsLoggedIn(true);
                 setActiveRole('MERCHANT');
                 setDashboardSubTab('overview');
                 addNotification('Beralih ke Dashboard Merchant', 'info');
@@ -237,6 +239,7 @@ export const DashboardView: React.FC = () => {
           {activeRole === 'MERCHANT' && (
             <button
               onClick={() => {
+                setIsLoggedIn(true);
                 setActiveRole('USER');
                 setDashboardSubTab('overview');
                 addNotification('Beralih ke Dashboard Customer', 'info');
