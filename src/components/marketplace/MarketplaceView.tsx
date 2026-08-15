@@ -80,118 +80,121 @@ export const MarketplaceView: React.FC = () => {
           </p>
         </div>
 
-        {/* 1. FILTER PENCARIAN (AT THE TOP) */}
-        <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-5 space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-200">
-            <span className="font-bold text-navy text-sm flex items-center gap-2">
-              <Filter className="w-4 h-4 text-gold" /> Filter Pencarian
-            </span>
-            {(selectedCategory || minPrice || maxPrice) && (
-              <button
-                onClick={() => {
-                  setSelectedCategory(null);
-                  setMinPrice('');
-                  setMaxPrice('');
-                }}
-                className="text-xs text-rose-600 hover:underline"
-              >
-                Reset
-              </button>
-            )}
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Category Filter */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Kategori</label>
-              <select
-                value={selectedCategory || ''}
-                onChange={(e) => setSelectedCategory(e.target.value || null)}
-                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs text-slate-900 focus:outline-none focus:border-gold"
-              >
-                <option value="">Semua Kategori</option>
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.slug}>
-                    {cat.name}
-                  </option>
-                ))}
-              </select>
+        {/* Sticky Filter & Search Bar Wrapper */}
+        <div className="sticky top-32 sm:top-36 z-30 bg-slate-50 py-1.5 space-y-2">
+          {/* 1. FILTER PENCARIAN (AT THE TOP) */}
+          <div className="bg-white border border-slate-200 shadow-xs rounded-xl p-3 space-y-2">
+            <div className="flex items-center justify-between pb-1.5 border-b border-slate-200">
+              <span className="font-bold text-navy text-xs flex items-center gap-1.5">
+                <Filter className="w-3.5 h-3.5 text-gold" /> Filter Pencarian
+              </span>
+              {(selectedCategory || minPrice || maxPrice) && (
+                <button
+                  onClick={() => {
+                    setSelectedCategory(null);
+                    setMinPrice('');
+                    setMaxPrice('');
+                  }}
+                  className="text-[10px] text-rose-600 hover:underline"
+                >
+                  Reset
+                </button>
+              )}
             </div>
 
-            {/* Price Range */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Rentang Harga (Rp)</label>
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <input
-                  type="text"
-                  placeholder="Min"
-                  value={minPrice}
-                  onChange={(e) => setMinPrice(formatRupiahInput(e.target.value))}
-                  className="bg-white border border-slate-300 rounded-xl p-2 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-gold"
-                />
-                <input
-                  type="text"
-                  placeholder="Max"
-                  value={maxPrice}
-                  onChange={(e) => setMaxPrice(formatRupiahInput(e.target.value))}
-                  className="bg-white border border-slate-300 rounded-xl p-2 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-gold"
-                />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              {/* Category Filter */}
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Kategori</label>
+                <select
+                  value={selectedCategory || ''}
+                  onChange={(e) => setSelectedCategory(e.target.value || null)}
+                  className="w-full bg-white border border-slate-300 rounded-lg p-1.5 text-xs text-slate-900 focus:outline-none focus:border-gold"
+                >
+                  <option value="">Semua Kategori</option>
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.slug}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Price Range */}
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Rentang Harga (Rp)</label>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <input
+                    type="text"
+                    placeholder="Min"
+                    value={minPrice}
+                    onChange={(e) => setMinPrice(formatRupiahInput(e.target.value))}
+                    className="bg-white border border-slate-300 rounded-lg p-1.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-gold"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Max"
+                    value={maxPrice}
+                    onChange={(e) => setMaxPrice(formatRupiahInput(e.target.value))}
+                    className="bg-white border border-slate-300 rounded-lg p-1.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-gold"
+                  />
+                </div>
+              </div>
+
+              {/* Sorting Filter */}
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Urutkan Berdasarkan</label>
+                <select
+                  value={sortBy}
+                  onChange={(e: any) => setSortBy(e.target.value)}
+                  className="w-full bg-white border border-slate-300 rounded-lg p-1.5 text-xs text-slate-900 focus:outline-none focus:border-gold"
+                >
+                  <option value="terpopuler">Terpopuler & Terjual Banyak</option>
+                  <option value="terbaru">Terbaru Ditambahkan</option>
+                  <option value="murah">Harga Terendah</option>
+                  <option value="mahal">Harga Tertinggi</option>
+                </select>
               </div>
             </div>
+          </div>
 
-            {/* Sorting Filter */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Urutkan Berdasarkan</label>
-              <select
-                value={sortBy}
-                onChange={(e: any) => setSortBy(e.target.value)}
-                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs text-slate-900 focus:outline-none focus:border-gold"
-              >
-                <option value="terpopuler">Terpopuler & Terjual Banyak</option>
-                <option value="terbaru">Terbaru Ditambahkan</option>
-                <option value="murah">Harga Terendah</option>
-                <option value="mahal">Harga Tertinggi</option>
-              </select>
+          {/* 2. GLOBAL SEARCH BAR */}
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-1.5 flex flex-col sm:flex-row items-center gap-2 shadow-sm">
+            <div className="relative flex-1 w-full flex items-center">
+              <Search className="w-4 h-4 text-slate-400 ml-3 absolute pointer-events-none" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Cari produk, jasa, iklan, atau merchant..."
+                className="w-full bg-white border border-slate-300 rounded-lg pl-9 pr-4 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-gold placeholder-slate-400"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 text-slate-400 hover:text-slate-600"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
-          </div>
-        </div>
 
-        {/* 2. GLOBAL SEARCH BAR */}
-        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3 flex flex-col sm:flex-row items-center gap-3 shadow-md">
-          <div className="relative flex-1 w-full flex items-center">
-            <Search className="w-5 h-5 text-slate-400 ml-3 absolute pointer-events-none" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cari produk, jasa, iklan, atau merchant..."
-              className="w-full bg-white border border-slate-300 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-gold placeholder-slate-400"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-3 text-slate-400 hover:text-slate-600"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
-          </div>
-
-          {/* Search Tab Selector (Semua | Produk | Merchant) */}
-          <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 shrink-0 w-full sm:w-auto">
-            {(['semua', 'produk', 'merchant'] as const).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveSearchTypeTab(tab as any)}
-                className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-bold capitalize transition-all ${
-                  activeSearchTypeTab === tab
-                    ? 'bg-navy text-white shadow-sm'
-                    : 'text-slate-600 hover:text-navy'
-                }`}
-              >
-                {tab === 'produk' ? 'Produk Digital' : tab === 'merchant' ? 'Merchant Directory' : 'Semua'}
-              </button>
-            ))}
+            {/* Search Tab Selector (Semua | Produk | Merchant) */}
+            <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200 shrink-0 w-full sm:w-auto">
+              {(['semua', 'produk', 'merchant'] as const).map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveSearchTypeTab(tab as any)}
+                  className={`flex-1 sm:flex-none px-3 py-1 rounded-md text-[10px] font-bold capitalize transition-all ${
+                    activeSearchTypeTab === tab
+                      ? 'bg-navy text-white shadow-xs'
+                      : 'text-slate-600 hover:text-navy'
+                  }`}
+                >
+                  {tab === 'produk' ? 'Produk Digital' : tab === 'merchant' ? 'Merchant Directory' : 'Semua'}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
