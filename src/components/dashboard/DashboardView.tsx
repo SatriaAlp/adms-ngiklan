@@ -25,6 +25,7 @@ import {
   Sparkles,
   Heart,
   Bell,
+  History,
   FileText,
   Wallet,
   Send,
@@ -278,7 +279,7 @@ export const DashboardView: React.FC = () => {
       {/* Dashboard Workspace */}
       <div className="flex flex-col gap-6">
         {/* Top Navigation Menu (Horizontal) */}
-        <div className="sticky top-16 sm:top-20 z-35 bg-slate-50 py-1">
+        <div className="relative">
           <div
             className="flex flex-row gap-1.5 p-2 bg-white border border-slate-200 rounded-2xl shadow-xs w-full overflow-x-auto scrollbar-none"
             onScroll={(e) => {
@@ -400,15 +401,15 @@ export const DashboardView: React.FC = () => {
               </button>
 
               <button
-                onClick={() => setDashboardSubTab('notifications-tab')}
+                onClick={() => setDashboardSubTab('history-tab')}
                 className={`px-4 py-3 rounded-xl font-bold text-xs flex items-center gap-2.5 transition-all shrink-0 ${
-                  dashboardSubTab === 'notifications-tab'
+                  dashboardSubTab === 'history-tab'
                     ? 'bg-navy/10 text-navy border border-navy/10 shadow-xs'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                 }`}
               >
-                <Bell className="w-4 h-4 text-indigo-500" />
-                <span>Notifikasi</span>
+                <History className="w-4 h-4 text-indigo-500" />
+                <span>Riwayat</span>
               </button>
 
               <button
@@ -874,18 +875,18 @@ export const DashboardView: React.FC = () => {
             </div>
           )}
 
-          {/* User: Notifikasi */}
-          {dashboardSubTab === 'notifications-tab' && activeRole === 'USER' && (
+          {/* User: Riwayat */}
+          {dashboardSubTab === 'history-tab' && activeRole === 'USER' && (
             <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-6 shadow-xs animate-in fade-in duration-200">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="font-bold text-lg text-slate-900">Pemberitahuan & Notifikasi</h3>
+                  <h3 className="font-bold text-lg text-slate-900">Riwayat & Pemberitahuan</h3>
                   <p className="text-xs text-slate-500">Informasi terbaru mengenai aktivitas akun dan transaksi Anda.</p>
                 </div>
                 <button
                   onClick={() => {
                     setUserNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-                    addNotification('Semua notifikasi ditandai telah dibaca', 'info');
+                    addNotification('Semua riwayat ditandai telah dibaca', 'info');
                   }}
                   className="text-xs font-bold text-cyan-600 hover:underline"
                 >
@@ -902,7 +903,7 @@ export const DashboardView: React.FC = () => {
                     }`}
                   >
                     <div className={`p-2 rounded-lg mt-0.5 shrink-0 ${n.read ? 'bg-slate-100 text-slate-500' : 'bg-cyan-100 text-cyan-600'}`}>
-                      <Bell className="w-4 h-4" />
+                      <History className="w-4 h-4" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">

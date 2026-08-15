@@ -73,14 +73,19 @@ export const Navbar: React.FC = () => {
     <header className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-slate-200 transition-all shadow-xs">
 
       {/* Main Sticky Navbar */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-2 sm:gap-4">
         {/* Brand Logo */}
         <button
           onClick={() => handleNav('home')}
           className="flex items-center gap-2 group text-left focus:outline-none transition-transform hover:scale-[1.01]"
           title="ADMS - PT. Armada Digital Marketing Syariah"
         >
-          <AdmsLogo size="md" />
+          <span className="lg:hidden flex items-center">
+            <AdmsLogo size="md" variant="symbol" />
+          </span>
+          <span className="hidden lg:flex items-center">
+            <AdmsLogo size="md" variant="full" />
+          </span>
         </button>
 
         {/* Desktop Navigation Links */}
@@ -123,7 +128,7 @@ export const Navbar: React.FC = () => {
         </nav>
 
         {/* Right Actions */}
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-1.5 sm:gap-2.5">
           {/* Quick Search */}
           <button
             onClick={() => {
@@ -137,7 +142,7 @@ export const Navbar: React.FC = () => {
                 navigate('marketplace');
               }
             }}
-            className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
+            className="p-2 sm:p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
             title="Cari Produk / Iklan"
           >
             <Search className="w-4 h-4" />
@@ -149,7 +154,7 @@ export const Navbar: React.FC = () => {
               setCartDrawerTab('wishlist');
               setIsCartOpen(true);
             }}
-            className="relative p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
+            className="relative p-2 sm:p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
             title="Wishlist Saya"
           >
             <Heart className="w-4 h-4" />
@@ -162,7 +167,7 @@ export const Navbar: React.FC = () => {
 
           {/* Notification Icon */}
           <button
-            className="relative p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
+            className="relative p-2 sm:p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
             title="Notifikasi"
           >
             <Bell className="w-4 h-4" />
@@ -171,13 +176,13 @@ export const Navbar: React.FC = () => {
 
           {/* Auth Actions (Masuk/Daftar) or Profile Dropdown */}
           {!isLoggedIn ? (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2">
               <button
                 onClick={() => {
                   setLoginModalDefaultTab('login');
                   setIsLoginModalOpen(true);
                 }}
-                className="px-4 py-2 text-xs sm:text-sm font-bold text-navy border border-navy hover:bg-navy/5 rounded-xl transition-all"
+                className="px-2.5 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-sm font-bold text-navy border border-navy hover:bg-navy/5 rounded-xl transition-all"
               >
                 Masuk
               </button>
@@ -186,7 +191,7 @@ export const Navbar: React.FC = () => {
                   setLoginModalDefaultTab('register');
                   setIsLoginModalOpen(true);
                 }}
-                className="px-4 py-2 text-xs sm:text-sm font-bold text-white bg-navy hover:bg-navy/90 rounded-xl transition-all shadow-xs"
+                className="px-2.5 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-sm font-bold text-white bg-navy hover:bg-navy/90 rounded-xl transition-all shadow-xs"
               >
                 Daftar
               </button>
@@ -195,17 +200,17 @@ export const Navbar: React.FC = () => {
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                className="flex items-center gap-1.5 p-1 px-2.5 rounded-full hover:bg-slate-100 transition-colors focus:outline-none"
+                className="flex items-center gap-1 p-0.5 sm:p-1 sm:px-2.5 rounded-full hover:bg-slate-100 transition-colors focus:outline-none"
                 title="Menu Pengguna"
               >
-                <div className="w-9 h-9 rounded-full bg-navy text-gold flex items-center justify-center font-bold text-sm overflow-hidden border border-slate-200">
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-navy text-gold flex items-center justify-center font-bold text-xs sm:text-sm overflow-hidden border border-slate-200">
                   {currentUser?.avatar ? (
                     <img src={currentUser.avatar} alt={currentUser.name} className="w-full h-full object-cover" />
                   ) : (
-                    <User className="w-5 h-5 text-gold" />
+                    <User className="w-4 h-4 sm:w-5 sm:h-5 text-gold" />
                   )}
                 </div>
-                <ChevronDown className="w-4 h-4 text-slate-600 transition-transform duration-200" style={{ transform: profileDropdownOpen ? 'rotate(180deg)' : 'none' }} />
+                <ChevronDown className="hidden sm:block w-4 h-4 text-slate-600 transition-transform duration-200" style={{ transform: profileDropdownOpen ? 'rotate(180deg)' : 'none' }} />
               </button>
 
               {/* Dropdown Menu */}
@@ -314,9 +319,9 @@ export const Navbar: React.FC = () => {
           {/* Mobile Hamburger Toggle */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-2.5 rounded-xl bg-slate-100 border border-slate-200 text-slate-700 hover:text-slate-900"
+            className="lg:hidden p-2 sm:p-2.5 rounded-xl bg-slate-100 border border-slate-200 text-slate-700 hover:text-slate-900"
           >
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            {mobileMenuOpen ? <X className="w-4 h-4 sm:w-5 sm:h-5" /> : <Menu className="w-4 h-4 sm:w-5 sm:h-5" />}
           </button>
         </div>
       </div>
