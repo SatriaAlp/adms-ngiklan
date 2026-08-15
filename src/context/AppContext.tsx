@@ -315,10 +315,39 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const fetchMerchants = async () => {
+    try {
+      const backendMerchants = await api.getMerchants();
+      if (backendMerchants && backendMerchants.length > 0) {
+        const mappedMerchants: Merchant[] = backendMerchants.map(m => ({
+          id: m.id,
+          name: m.name,
+          slug: m.slug,
+          logo: m.logo || 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=200&h=200&auto=format&fit=crop&q=80',
+          banner: m.banner || 'https://images.unsplash.com/photo-1614680376593-902f74cf0d41?w=1200&h=400&auto=format&fit=crop&q=80',
+          description: m.description || '',
+          isVerified: m.verificationStatus === 'VERIFIED',
+          rating: 0,
+          reviewCount: 0,
+          totalProducts: m.products ? m.products.length : 0,
+          totalSales: 0,
+          joinedDate: m.createdAt,
+          location: m.location || m.address || 'Indonesia',
+          contactWhatsapp: m.contactWhatsapp || m.phone || '081234567890',
+          ownerId: m.ownerId
+        }));
+        setMerchants(mappedMerchants);
+      }
+    } catch (error) {
+      console.error('Failed to fetch merchants', error);
+    }
+  };
+
   React.useEffect(() => {
     fetchProducts();
     fetchCategories();
     fetchPublicAds();
+    fetchMerchants();
   }, []);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [wishlist, setWishlist] = useState<string[]>(['prod-1']);

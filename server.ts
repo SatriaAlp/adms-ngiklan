@@ -891,13 +891,21 @@ Email: support@armadadigitalmarketing.top
 
   app.post("/api/public/merchants", async (req, res) => {
     try {
-      const { fullName, email, whatsapp, storeName, storeUsername, description, address } = req.body;
+      const { fullName, email, whatsapp, storeName, storeUsername, description, address, ownerId } = req.body;
       
       // Check if user exists by email, if not create dummy user (in real app, this is handled by Auth)
-      let user = await prisma.user.findUnique({ where: { email } });
+      let user = null;
+      if (ownerId) {
+        user = await prisma.user.findUnique({ where: { id: ownerId } });
+      }
+      if (!user) {
+        user = await prisma.user.findUnique({ where: { email } });
+      }
+      
       if (!user) {
         user = await prisma.user.create({
           data: {
+            id: ownerId || undefined, // use provided ID if available
             name: fullName,
             email,
             phone: whatsapp,

@@ -41,6 +41,7 @@ export const Navbar: React.FC = () => {
     loginModalDefaultTab,
     setLoginModalDefaultTab,
     currentUser,
+    merchants,
   } = useApp();
 
   const navigateReactRouter = useNavigate();
@@ -228,6 +229,20 @@ export const Navbar: React.FC = () => {
                     <ShieldCheck className="w-4 h-4 text-slate-450" />
                     <span>Dashboard</span>
                   </button>
+
+                  {activeRole === 'USER' && merchants.some(m => m.ownerId === currentUser.id && m.isVerified) && (
+                    <button
+                      onClick={() => {
+                        setProfileDropdownOpen(false);
+                        setActiveRole('MERCHANT');
+                        navigateReactRouter('/merchant/dashboard');
+                      }}
+                      className="w-full px-4 py-2 text-left text-xs font-bold text-indigo-700 hover:bg-indigo-50 flex items-center gap-2"
+                    >
+                      <Store className="w-4 h-4 text-indigo-500" />
+                      <span>Toko Merchant Anda</span>
+                    </button>
+                  )}
 
                   <button
                     onClick={() => {
