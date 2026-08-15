@@ -4,8 +4,10 @@ const prisma = new PrismaClient();
 
 async function main() {
   // Create Categories
-  const cat1 = await prisma.category.create({
-    data: {
+  const cat1 = await prisma.category.upsert({
+    where: { id: 'cat-1001' },
+    update: {},
+    create: {
       id: 'cat-1001',
       name: 'Template & Design',
       slug: 'template-design',
@@ -14,8 +16,10 @@ async function main() {
     }
   });
 
-  const cat2 = await prisma.category.create({
-    data: {
+  const cat2 = await prisma.category.upsert({
+    where: { id: 'cat-1002' },
+    update: {},
+    create: {
       id: 'cat-1002',
       name: 'Source Code',
       slug: 'source-code',
