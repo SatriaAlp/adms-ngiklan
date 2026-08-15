@@ -278,7 +278,7 @@ export const DashboardView: React.FC = () => {
       {/* Dashboard Workspace */}
       <div className="flex flex-col gap-6">
         {/* Top Navigation Menu (Horizontal) */}
-        <div className="relative">
+        <div className="sticky top-16 sm:top-20 z-35 bg-slate-50 py-1">
           <div
             className="flex flex-row gap-1.5 p-2 bg-white border border-slate-200 rounded-2xl shadow-xs w-full overflow-x-auto scrollbar-none"
             onScroll={(e) => {
